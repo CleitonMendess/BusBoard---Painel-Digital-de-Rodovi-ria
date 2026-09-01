@@ -1,4 +1,4 @@
-# 🚌 BusBoard — Painel Digital de Rodoviária
+# 🚌 BusBoard -` Painel Digital de Rodoviária
 
 > Projeto **para produção real**: painel de chegadas/saídas de ônibus, estilo aeroporto,
 > para uma rodoviária de capital (cliente real, sogro do desenvolvedor).
