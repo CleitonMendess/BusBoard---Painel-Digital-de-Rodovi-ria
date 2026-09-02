@@ -1,6 +1,8 @@
 Para executar o servidor, use o comando: uvicorn main:app --reload
 link do servidor: http://127.0.0.1:8000
 
+/ordebs (caminho) / criar 
+
 Rest APIs:
 Get -> leitura/pegar
 Post -> Enviar/Criar
