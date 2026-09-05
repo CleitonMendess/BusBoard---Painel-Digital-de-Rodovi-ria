@@ -1,11 +1,16 @@
 {
   "editor.inlineSuggest.enabled": false,
   "editor.quickSuggestions": {
-    "other": false,
+    "other": true,
     "comments": false,
     "strings": false
   },
-  "editor.suggestOnTriggerCharacters": false,
+  "editor.suggestOnTriggerCharacters": true,
+  "editor.wordBasedSuggestions": "currentDocument",
+  "editor.suggest.showWords": true,
+  "editor.suggest.showSnippets": true,
+  "editor.suggest.matchOnWordStartOnly": true,
+  "editor.acceptSuggestionOnCommitCharacter": false,
   "github.copilot.enable": {
     "*": false,
     "plaintext": false,
