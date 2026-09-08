@@ -24,16 +24,20 @@ class User(Base):
     name = Column(String, nullable=False)
     username = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
-    role = Column(String, nullable=False)
+    role = Column(String, nullable=False, default="commom")
     active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    email = Column(String, unique=True, index=True, nullable=False)
+    cpf = Column(String, unique=True, index=True, nullable=False)
 
-    def __init__(self, name, username, password_hash, role, active=True):
+
+    def __init__(self, name, username, password_hash, email, role="commom", active=True):
         self.name = name
         self.username = username
         self.password_hash = password_hash
         self.role = role
         self.active = active
+        self.email = email
 
 
 class Company(Base):

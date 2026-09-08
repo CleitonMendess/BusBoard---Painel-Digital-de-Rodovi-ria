@@ -1,10 +1,14 @@
-Para executar o servidor, use o comando: uvicorn main:app --reload
-link do servidor: http://127.0.0.1:8000
+Regras importantes
 
-/ordebs (caminho) / criar 
-
-Rest APIs:
-Get -> leitura/pegar
-Post -> Enviar/Criar
-Put/Patch -> edição
-Delete -> deletar 
+1. Para executar o servidor, use: uvicorn main:app --reload
+2. Link local do servidor: http://127.0.0.1:8000
+3. REST APIs:
+	- Get -> leitura/pegar
+	- Post -> Enviar/Criar
+	- Put/Patch -> edição
+	- Delete -> deletar
+4. Segurança de usuários:
+	- A `role` não deve ficar livre no cadastro público.
+	- O ideal é criar usuário com `role` padrão, como `usuario`.
+	- A alteração de `role` deve ficar só em um fluxo administrativo autenticado.
+	- Por CPF, por segurança, (Ordens Sr Gilmar)
