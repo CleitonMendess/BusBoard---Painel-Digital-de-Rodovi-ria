@@ -12,3 +12,5 @@ Regras importantes
 	- O ideal é criar usuário com `role` padrão, como `usuario`.
 	- A alteração de `role` deve ficar só em um fluxo administrativo autenticado.
 	- Por CPF, por segurança, (Ordens Sr Gilmar)
+
+'''Aula 4 aos 50 ele explica a logica de como alterar usuario e outras coisas'''
