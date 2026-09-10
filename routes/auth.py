@@ -4,10 +4,14 @@ from models import User, db
 from sqlalchemy.orm import sessionmaker
 from dependecies import session_parametr
 from main import bcrypt_context
-from schemas import UserSchema
+from schemas import UserSchema, LoginSchema
 from sqlalchemy.orm import Session
 
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
+
+def creat_token(id):
+    token = f"YjtZy9bMZq3I2Lkv4LfUKjbkh{id}Af47vzUh9KFW5Aq6HDYtELfcbGhMK8EQaAmcX4y"
+    return token
 
 @auth_router.get("/")
 async def home():
@@ -30,5 +34,12 @@ async def creat_user(usuario: UserSchema, session: Session = Depends(session_par
         session.commit()
         return {"mensagem": f"Usuário cadastrado com sucesso {usuario.email}"}
 
-
-    
+@auth_router.post("/login")
+async def login (login_schema: LoginSchema, session: Session = Depends(session_parametr)):
+    user = session.query(User).filter(User.email==login_schema.email).first
+    if not user:
+            raise HTTPException(status_code=400, detail="E-mail não cadastrado")
+    else:
+         access_token = creat_token(User.id)
+         return{"access_token": access_token,
+                "token_type" : "Bearer"}

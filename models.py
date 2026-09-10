@@ -55,12 +55,12 @@ class Destination(Base):
     __tablename__ = "destinations"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
+    city = Column(String, nullable=False)
     state = Column(String, nullable=False)
     active = Column(Boolean, default=True)
 
-    def __init__(self, name, state, active=True):
-        self.name = name
+    def __init__(self, city, state, active=True):
+        self.city = city
         self.state = state
         self.active = active
 
