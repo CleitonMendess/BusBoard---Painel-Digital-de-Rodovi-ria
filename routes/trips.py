@@ -1,9 +1,9 @@
 # trips.py → viagens, saídas, chegadas, alteração de horário
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from dependecies import session_parametr
-from schemas import TripBaseSchema, TripCreateSchema, TripResponseSchema, TripsSchemas, TripUpdateSchema
-from models import Trip
+from schemas import TripSchema
+from models import Trip, Company, Destination,Platform
 
 
 trips_router = APIRouter(prefix="/trips", tags=["trips"])
@@ -15,32 +15,31 @@ Apenas listar pode ser acessado por um usuario que não é ADM
 async def viagens():
     return {"mensagen" : "Você está acessando a pagina de viagens"}
 
-@trips_router.get("/listar")
-async def listar():
-    return {"mensagen" : "Def para listar as viagens"}
 
-@trips_router.get("/criar")
-async def criar():
-    return {"mensagen" : "Def para criar as viagens"}
+@trips_router.post("/creat_trips")
+async def creat_trips(trip_schema: TripSchema, session: Session = Depends(session_parametr)):
+    company = session.query(Company).filter(Company.id == trip_schema.company_id).first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Empresa não encontrada")
 
-@trips_router.get("/editar")
-async def editar():
-    return {"mensagen" : "Def para editar as viagens"}
+    destination = session.query(Destination).filter(Destination.id == trip_schema.destination_id).first()
+    if not destination:
+        raise HTTPException(status_code=404, detail="Destino não encontrado")
 
-@trips_router.get("/time")
-async def time():
-    return {"mensagen" : "Def para editar horario das viagens"}
+    platform = session.query(Platform).filter(Platform.id == trip_schema.platform_id).first()
+    if not platform:
+        raise HTTPException(status_code=404, detail="Plataforma não encontrada")
 
-
-"""@trips_router.post("/trips")
-async def creat_trips(trips_base: TripCreateSchema, session: Session = Depends(session_parametr)):
-    new_trip = Trip(scheduled_time=None, company_id=)
-
-
-    type,
-            scheduled_time,
-            company_id,
-            destination_id,
-            platform_id,
-            estimated_time=None,
-            status="AGENDADO","""
+    new_trip = Trip(
+        type=trip_schema.type,
+        scheduled_time=trip_schema.scheduled_time,
+        company_id=trip_schema.company_id,
+        destination_id=trip_schema.destination_id,
+        platform_id=trip_schema.platform_id,
+        estimated_time=trip_schema.estimated_time,
+        status=trip_schema.status or "AGENDADO",
+    )
+    session.add(new_trip)
+    session.commit()
+    session.refresh(new_trip)
+    return {"mensagem": "Viagem cadastrada com sucesso", "trip": new_trip}

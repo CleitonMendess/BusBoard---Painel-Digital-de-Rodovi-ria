@@ -17,7 +17,7 @@ Essa é a rota padrão de companias do nosso sistema. Todas as rotas dos pedidos
     """
     return{"mensagem": "Você acessou a rota de companhias"}
 
-@companies_router.post("/companies")
+@companies_router.post("/creat_companies")
 async def creat_companie(companies_schema: CompanySchema, session: Session = Depends(session_parametr)):
     companies = session.query(Company).filter(Company.name == companies_schema.name).first()
     if companies:

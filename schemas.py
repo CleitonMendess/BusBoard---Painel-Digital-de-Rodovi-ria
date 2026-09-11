@@ -29,24 +29,22 @@ class DestinationsSchema(BaseModel):
     state: str
     active: Optional[bool]
 
-class Config:
-    from_attributes = True
+    class Config:
+        from_attributes = True
 
 class PlatformsSchema(BaseModel):
     number: int
     active: Optional[bool]
 
-class Config:
-    from_attributes = True
+    class Config:
+        from_attributes = True
 
 class LoginSchema(BaseModel):
     email: str
-    passwor: str
+    password: str
 
-class Config:
-    from_attributes = True
-
-
+    class Config:
+        from_attributes = True
 
 
 # Base para qualquer schema de viagem
@@ -64,17 +62,10 @@ class TripBaseSchema(BaseModel):
         from_attributes = True
 
 
-# Schema usado quando o cliente vai criar uma viagem
-# Ele herda tudo de TripBaseSchema, porque para criar precisa dos campos principais
-class TripCreateSchema(TripBaseSchema):
-    pass
-
-
-# Schema usado para atualizar uma viagem
-# Todos os campos são opcionais porque nem sempre vai atualizar tudo ao mesmo tempo
-class TripUpdateSchema(BaseModel):
-    type: Optional[str] = None
-    scheduled_time: Optional[str] = None
+# Schema principal para criar uma viagem
+class TripSchema(BaseModel):
+    type: str
+    scheduled_time: str
     estimated_time: Optional[str] = None
     status: Optional[str] = None
     company_id: Optional[int] = None
@@ -94,8 +85,3 @@ class TripResponseSchema(TripBaseSchema):
 
     class Config:
         from_attributes = True
-
-
-# Alias simples para manter o nome mais genérico
-# Pode ser usado como "TripsSchemas" no lugar de "TripCreateSchema"
-TripsSchemas = TripCreateSchema
