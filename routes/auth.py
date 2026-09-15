@@ -1,18 +1,26 @@
 # auth.py → login e autenticação
 from fastapi import APIRouter, Depends, HTTPException
 from models import User, db
-from sqlalchemy.orm import sessionmaker
-from dependecies import session_parametr
-from main import bcrypt_context
+from dependecies import session_parametr, verificar_token
+from main import bcrypt_context, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY
 from schemas import UserSchema, LoginSchema
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, sessionmaker
+from jose import jwt, JWTError
+from datetime import datetime, timedelta, timezone
+from fastapi.security import OAuth2PasswordRequestForm
+
+
 
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
+#Def para gerar token com jwt
+def creat_token(id, duracao_token=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)):
+    exp = datetime.now(timezone.utc) + duracao_token
+    dic_info = {"sub" : str(id), "exp" : int(exp.timestamp())}
+    encode_jwt = jwt.encode(dic_info, SECRET_KEY, ALGORITHM )
+    return encode_jwt
 
-def creat_token(id):
-    token = f"YjtZy9bMZq3I2Lkv4LfUKjbkh{id}Af47vzUh9KFW5Aq6HDYtELfcbGhMK8EQaAmcX4y"
-    return token
 
+#Def para autenticar o user
 def autenticar_user(email, password, session):
      user = session.query(User).filter(User.email==email).first()
      if not user:
@@ -51,5 +59,31 @@ async def login (login_schema: LoginSchema, session: Session = Depends(session_p
             raise HTTPException(status_code=400, detail="Usuário não encontrado ou credenciais inválidas ")
     else:
          access_token = creat_token(user.id)
+         refresh_token = creat_token(user.id, duracao_token=timedelta(days=7))
+         return{"access_token": access_token,
+                "refresh_token": refresh_token, #dura 7 dias
+                "token_type" : "Bearer"}
+
+
+
+
+@auth_router.post("/login-form")
+async def login_form (dados_formulario: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(session_parametr)):
+    user = autenticar_user(dados_formulario.username, dados_formulario.password, session)
+    if not user:
+            raise HTTPException(status_code=400, detail="Usuário não encontrado ou credenciais inválidas ")
+    else:
+         access_token = creat_token(user.id)
          return{"access_token": access_token,
                 "token_type" : "Bearer"}
+
+
+    
+
+@auth_router.get("/refresh")
+async def user_refresh_token(user: User = Depends(verificar_token)):
+    access_token = creat_token(user.id)
+    return{"access_token": access_token,
+            "token_type" : "Bearer"}
+
+
