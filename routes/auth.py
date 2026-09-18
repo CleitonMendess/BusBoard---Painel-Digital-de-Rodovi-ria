@@ -8,10 +8,27 @@ from sqlalchemy.orm import Session, sessionmaker
 from jose import jwt, JWTError
 from datetime import datetime, timedelta, timezone
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordBearer
 
 
 
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
+oauth2_schema_optional = OAuth2PasswordBearer(tokenUrl="auth/login-form", auto_error=False)
+
+
+# Tenta identificar o usuário logado, mas não obriga autenticação.
+def verificar_token_opcional(token: str | None = Depends(oauth2_schema_optional), session: Session = Depends(session_parametr)):
+    if not token:
+        return None
+
+    try:
+        dic_info = jwt.decode(token, SECRET_KEY, ALGORITHM)
+        user_id = int(dic_info.get("sub"))
+    except (JWTError, TypeError, ValueError):
+        return None
+
+    user = session.query(User).filter(User.id == user_id).first()
+    return user
 #Def para gerar token com jwt
 def creat_token(id, duracao_token=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)):
     exp = datetime.now(timezone.utc) + duracao_token
@@ -38,18 +55,31 @@ Rota padrão de loguin do sistema
     return{"mensagem" : "Você acessou a rota de login"}
 
 @auth_router.post("/creat_user")
-async def creat_user(usuario: UserSchema, session: Session = Depends(session_parametr)):
+async def creat_user(
+    usuario: UserSchema,
+    session: Session = Depends(session_parametr),
+    current_user: User | None = Depends(verificar_token_opcional), #verificar se existe token ou é none
+):
 
     user = session.query(User).filter(User.email == usuario.email).first()
     if user:
         raise HTTPException(status_code=400, detail="E-mail do usuário já cadastrado")
 
-    else:
-        password_crypt = bcrypt_context.hash(usuario.password)
-        new_user = User(usuario.name, usuario.email, password_crypt, usuario.role or "commom", usuario.active)
-        session.add(new_user)
-        session.commit()
-        return {"mensagem": f"Usuário cadastrado com sucesso {usuario.email}"}
+    # Se pedirem ADM, só deixa continuar quando o usuário logado também for ADM.
+    role_solicitado = (usuario.role or "commom").lower()
+    if role_solicitado == "adm" and (not current_user or current_user.role != "adm"):
+        raise HTTPException(
+            status_code=403,
+            detail="Apenas administradores podem criar contas Admin",
+        )
+
+    role_final = "adm" if role_solicitado == "adm" else "commom"
+
+    password_crypt = bcrypt_context.hash(usuario.password)
+    new_user = User(usuario.name, usuario.email, password_crypt, role_final, usuario.active)
+    session.add(new_user)
+    session.commit()
+    return {"mensagem": f"Usuário cadastrado com sucesso {usuario.email}", "role": role_final}
 
 #login -> email e senha - > token JWT 
 @auth_router.post("/login")

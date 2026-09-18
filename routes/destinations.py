@@ -2,11 +2,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from schemas import DestinationsSchema
 from models import Destination, db
-from dependecies import session_parametr
+from dependecies import session_parametr, verificar_token
 from sqlalchemy.orm import Session
 
 
-destinations_router = APIRouter(prefix="/destinations", tags=["destinations"])
+destinations_router = APIRouter(prefix="/destinations", tags=["destinations"], dependencies=[Depends(verificar_token)])
 
 
 @destinations_router.get("/")

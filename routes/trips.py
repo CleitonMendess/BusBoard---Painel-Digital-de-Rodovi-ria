@@ -1,12 +1,12 @@
 # trips.py → viagens, saídas, chegadas, alteração de horário
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from dependecies import session_parametr
+from dependecies import session_parametr, verificar_token
 from schemas import TripSchema
-from models import Trip, Company, Destination,Platform
+from models import Trip, Company, Destination,Platform, User
 
 
-trips_router = APIRouter(prefix="/trips", tags=["trips"])
+trips_router = APIRouter(prefix="/trips", tags=["trips"], dependencies=[Depends(verificar_token)])
 
 """"
 Apenas listar pode ser acessado por um usuario que não é ADM
@@ -17,8 +17,14 @@ async def viagens():
 
 
 @trips_router.post("/creat_trips")
-async def creat_trips(trip_schema: TripSchema, session: Session = Depends(session_parametr)):
+async def creat_trips(trip_schema: TripSchema,
+session: Session = Depends(session_parametr),
+user: User = Depends(verificar_token)):
+    if user.role != "adm":
+        raise HTTPException(status_code=403, detail="Você não tem autorização para criar viagens")
+    
     company = session.query(Company).filter(Company.id == trip_schema.company_id).first()
+    
     if not company:
         raise HTTPException(status_code=404, detail="Empresa não encontrada")
 
@@ -43,3 +49,39 @@ async def creat_trips(trip_schema: TripSchema, session: Session = Depends(sessio
     session.commit()
     session.refresh(new_trip)
     return {"mensagem": "Viagem cadastrada com sucesso", "trip": new_trip}
+
+@trips_router.patch("/status/{id_trip}")
+async def status_trip(id_trip: int, status: str,
+session: Session = Depends(session_parametr),
+ user: User = Depends(verificar_token)):
+
+    if user.role != "adm":
+        raise HTTPException(status_code=401, detail="Você não tem autorização para fazer essa modificação")
+
+    trip = session.query(Trip).filter(Trip.id == id_trip).first()
+    if not trip:
+        raise HTTPException(status_code=404, detail="Viagem não encontrada")
+
+    status_validos = {
+        "AGENDADO",
+        "NO HORARIO",
+        "EMBARQUE",
+        "ATRASADO",
+        "CANCELADO",
+        "SAIU",
+        "CHEGOU",
+    }
+
+    status_normalizado = status.upper()
+    if status_normalizado not in status_validos:
+        raise HTTPException(status_code=400, detail="Status inválido")
+
+    trip.status = status_normalizado
+    session.commit()
+    session.refresh(trip)
+
+    return {
+        "mensagem": "Status da viagem atualizado com sucesso",
+        "trip_id": trip.id,
+        "status_atual": trip.status,
+    }
