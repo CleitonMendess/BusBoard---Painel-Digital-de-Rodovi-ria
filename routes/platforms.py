@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from schemas import PlatformsSchema
 from models import Platform, db, User
-from dependecies import session_parametr, verificar_token
+from dependecies import session_parametr, verificar_token, verificar_admin
 from sqlalchemy.orm import Session
 
 platforms_router = APIRouter(prefix="/platforms", tags=["platforms"], dependencies=[Depends(verificar_token)])
@@ -29,3 +29,10 @@ async def creat_platforms(platforms_schema: PlatformsSchema,
         session.commit()
         return {"mensagem": f"Plataforma {platforms_schema.number} cadastrada com sucesso"}
     
+@platforms_router.get("/list")
+async def list_plataforms(Session = Depends(session_parametr),user: User = Depends(verificar_admin) ):
+     if user.role != "adm":
+          raise HTTPException(status_code=403, detail="Você não tem autorização para essa operação")
+     else:
+          plataforms = Session.query(Platform).all()
+          return{"Plataformas" : plataforms}

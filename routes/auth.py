@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from models import User, db
 from dependecies import session_parametr, verificar_token
 from main import bcrypt_context, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY
-from schemas import UserSchema, LoginSchema
+from schemas import UserSchema, LoginSchema, RoleSchema
 from sqlalchemy.orm import Session, sessionmaker
 from jose import jwt, JWTError
 from datetime import datetime, timedelta, timezone
@@ -22,7 +22,7 @@ def verificar_token_opcional(token: str | None = Depends(oauth2_schema_optional)
         return None
 
     try:
-        dic_info = jwt.decode(token, SECRET_KEY, ALGORITHM)
+        dic_info = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = int(dic_info.get("sub"))
     except (JWTError, TypeError, ValueError):
         return None
@@ -50,7 +50,7 @@ def autenticar_user(email, password, session):
 @auth_router.get("/")
 async def home():
     """"
-Rota padrão de loguin do sistema
+Rota padrão de login do sistema
     """
     return{"mensagem" : "Você acessou a rota de login"}
 
@@ -80,6 +80,36 @@ async def creat_user(
     session.add(new_user)
     session.commit()
     return {"mensagem": f"Usuário cadastrado com sucesso {usuario.email}", "role": role_final}
+
+"""Alterar a role para adm ou commom"""
+@auth_router.patch("/users/{user_id}/role")
+async def changes_role(role_shema: RoleSchema, user_id: int,
+session: Session = Depends(session_parametr),
+current_user: User | None = Depends(verificar_token_opcional)):
+
+    if not current_user or current_user.role != "adm":
+        raise HTTPException(
+            status_code=403,
+            detail="Apenas usuarios administradores podem mudar a função"
+        )
+
+    user = session.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail=" O usuário não encontrado")
+    role_normalizada = role_shema.role.lower()
+    if role_normalizada not in {"adm", "commom"}:
+        raise HTTPException(status_code=400, detail="Role inválida")
+
+    user.role = role_normalizada
+    session.commit()
+    session.refresh(user)
+
+    return {
+        "mensagem": "Role atualizada com sucesso",
+        "user_id": user.id,
+        "role_atual": user.role,
+    }
+
 
 #login -> email e senha - > token JWT 
 @auth_router.post("/login")

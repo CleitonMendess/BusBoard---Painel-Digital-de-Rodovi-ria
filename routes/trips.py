@@ -1,7 +1,7 @@
 # trips.py → viagens, saídas, chegadas, alteração de horário
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from dependecies import session_parametr, verificar_token
+from dependecies import session_parametr, verificar_token, verificar_admin
 from schemas import TripSchema
 from models import Trip, Company, Destination,Platform, User
 
@@ -85,3 +85,12 @@ session: Session = Depends(session_parametr),
         "trip_id": trip.id,
         "status_atual": trip.status,
     }
+
+@trips_router.get("/list")
+async def list_trips(Session = Depends(session_parametr),user: User = Depends(verificar_admin) ):
+     if user.role != "adm":
+          raise HTTPException(status_code=403, detail="Você não tem autorização para essa operação")
+     else:
+          trips = Session.query(Trip).all()
+          return{"Viagens" : trips}
+    

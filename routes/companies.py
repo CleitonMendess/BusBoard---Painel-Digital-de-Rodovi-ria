@@ -44,5 +44,10 @@ async def delete_companie(
      session.commit()
      return{"mensagem": f"Companhia {companies.name} excluida com sucesso"}
 
-
-         
+@companies_router.get("/list")
+async def list_companies(Session = Depends(session_parametr),user: User = Depends(verificar_admin) ):
+     if user.role != "adm":
+          raise HTTPException(status_code=403, detail="Você não tem autorização para essa operação")
+     else:
+          companies = Session.query(Company).all()
+          return{"Companhias" : companies}

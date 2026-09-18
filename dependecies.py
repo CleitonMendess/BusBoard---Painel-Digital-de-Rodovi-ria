@@ -18,7 +18,7 @@ def session_parametr():
 
 def verificar_token(token: str = Depends(oauth2_schema), session: Session = Depends(session_parametr)):
     try:
-        dic_info = jwt.decode(token, SECRET_KEY, ALGORITHM)
+        dic_info = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = int(dic_info.get("sub"))
     except (JWTError, TypeError, ValueError):
         raise HTTPException(status_code=401, detail="Acesso Negado, verifique a validade do token")

@@ -14,3 +14,5 @@ Regras importantes
 	- Por CPF, por segurança, (Ordens Sr Gilmar)
 
 '''Aula 4 aos 50 ele explica a logica de como alterar usuario e outras coisas'''
+
+por depois para admin mudar role

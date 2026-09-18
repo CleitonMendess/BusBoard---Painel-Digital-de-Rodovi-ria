@@ -1,8 +1,8 @@
 # destinations.py → destinos
 from fastapi import APIRouter, Depends, HTTPException
 from schemas import DestinationsSchema
-from models import Destination, db
-from dependecies import session_parametr, verificar_token
+from models import Destination, db, User
+from dependecies import session_parametr, verificar_token, verificar_admin
 from sqlalchemy.orm import Session
 
 
@@ -30,5 +30,11 @@ async def creat_destinations(destinationsSchema: DestinationsSchema, session: Se
         return {"mensagem": f"Destino cadastrado com sucesso {destinationsSchema.city, destinationsSchema.state}"}
                     
 
-    
+@destinations_router.get("/list")
+async def list_destinarions(Session = Depends(session_parametr),user: User = Depends(verificar_admin) ):
+     if user.role != "adm":
+          raise HTTPException(status_code=403, detail="Você não tem autorização para essa operação")
+     else:
+          destinations = Session.query(Destination).all()
+          return{"Destinos": destinations}
     

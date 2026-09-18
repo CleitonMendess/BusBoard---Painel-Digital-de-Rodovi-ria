@@ -46,6 +46,12 @@ class LoginSchema(BaseModel):
     class Config:
         from_attributes = True
 
+class RoleSchema(BaseModel):
+    role: str
+
+    class Config:
+        from_attributes = True
+
 
 # Base para qualquer schema de viagem
 # Aqui ficam os campos que toda viagem tem em comum
