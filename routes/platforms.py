@@ -11,8 +11,8 @@ platforms_router = APIRouter(prefix="/platforms", tags=["platforms"], dependenci
 async def plataforms():
     return{"mensagem": "Você está acessando a rota de plataformas dos onibus"}
 
-@platforms_router.post("/creat_platforms")
-async def creat_platforms(platforms_schema: PlatformsSchema,
+@platforms_router.post("/create_platforms")
+async def create_platforms(platforms_schema: PlatformsSchema,
     session: Session = Depends(session_parametr),
     user: User = Depends(verificar_token)):
 

@@ -17,7 +17,7 @@ Essa é a rota padrão de companias do nosso sistema. Todas as companhias precis
     return{"mensagem": "Você acessou a rota de companhias"}
 
 @companies_router.post("/create")
-async def creat_companie(
+async def create_companie(
     companies_schema: CompanySchema,
     user: User = Depends(verificar_admin),
     session: Session = Depends(session_parametr)):

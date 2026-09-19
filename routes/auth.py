@@ -30,7 +30,7 @@ def verificar_token_opcional(token: str | None = Depends(oauth2_schema_optional)
     user = session.query(User).filter(User.id == user_id).first()
     return user
 #Def para gerar token com jwt
-def creat_token(id, duracao_token=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)):
+def create_token(id, duracao_token=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)):
     exp = datetime.now(timezone.utc) + duracao_token
     dic_info = {"sub" : str(id), "exp" : int(exp.timestamp())}
     encode_jwt = jwt.encode(dic_info, SECRET_KEY, ALGORITHM )
@@ -55,7 +55,7 @@ Rota padrão de login do sistema
     return{"mensagem" : "Você acessou a rota de login"}
 
 @auth_router.post("/creat_user")
-async def creat_user(
+async def create_user(
     usuario: UserSchema,
     session: Session = Depends(session_parametr),
     current_user: User | None = Depends(verificar_token_opcional), #verificar se existe token ou é none
@@ -118,8 +118,8 @@ async def login (login_schema: LoginSchema, session: Session = Depends(session_p
     if not user:
             raise HTTPException(status_code=400, detail="Usuário não encontrado ou credenciais inválidas ")
     else:
-         access_token = creat_token(user.id)
-         refresh_token = creat_token(user.id, duracao_token=timedelta(days=7))
+         access_token = create_token(user.id)
+         refresh_token = create_token(user.id, duracao_token=timedelta(days=7))
          return{"access_token": access_token,
                 "refresh_token": refresh_token, #dura 7 dias
                 "token_type" : "Bearer"}
@@ -133,7 +133,7 @@ async def login_form (dados_formulario: OAuth2PasswordRequestForm = Depends(), s
     if not user:
             raise HTTPException(status_code=400, detail="Usuário não encontrado ou credenciais inválidas ")
     else:
-         access_token = creat_token(user.id)
+         access_token = create_token(user.id)
          return{"access_token": access_token,
                 "token_type" : "Bearer"}
 
@@ -142,7 +142,7 @@ async def login_form (dados_formulario: OAuth2PasswordRequestForm = Depends(), s
 
 @auth_router.get("/refresh")
 async def user_refresh_token(user: User = Depends(verificar_token)):
-    access_token = creat_token(user.id)
+    access_token = create_token(user.id)
     return{"access_token": access_token,
             "token_type" : "Bearer"}
 

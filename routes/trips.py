@@ -2,8 +2,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from dependecies import session_parametr, verificar_token, verificar_admin
-from schemas import TripSchema
-from models import Trip, Company, Destination,Platform, User
+from schemas import TripSchema, StatusLogCreateSchema
+from models import Trip, Company, Destination,Platform, User, StatusLog
 
 
 trips_router = APIRouter(prefix="/trips", tags=["trips"], dependencies=[Depends(verificar_token)])
@@ -16,8 +16,8 @@ async def viagens():
     return {"mensagen" : "Você está acessando a pagina de viagens"}
 
 
-@trips_router.post("/creat_trips")
-async def creat_trips(trip_schema: TripSchema,
+@trips_router.post("/create_trips")
+async def create_trips(trip_schema: TripSchema,
 session: Session = Depends(session_parametr),
 user: User = Depends(verificar_token)):
     if user.role != "adm":
@@ -93,4 +93,28 @@ async def list_trips(Session = Depends(session_parametr),user: User = Depends(ve
      else:
           trips = Session.query(Trip).all()
           return{"Viagens" : trips}
-    
+
+@trips_router.post("/{trip_id}/status_logs")
+async def creat_status_log(
+    trip_id: int,
+    status_log_data: StatusLogCreateSchema,
+    session: Session = Depends(session_parametr),
+    user: User = Depends(verificar_admin), ):
+    trip = session.query(Trip).filter(Trip.id == trip_id).first()   # valida o "pedido"
+    if not trip:
+        raise HTTPException(status_code=404, detail="Viagem não encontrada")
+
+    status_validos = {...}  # mesma lista que você já usa em trips.py:65
+    if status_log_data.new_status not in status_validos:
+        raise HTTPException(status_code=400, detail="Status inválido")
+
+    log = StatusLog(                                   # cria o "item"
+        trip_id=trip.id,
+        old_status=status_log_data.old_status or trip.status,
+        new_status=status_log_data.new_status,
+        changed_by=status_log_data.changed_by or user.id,
+    )
+    session.add(log)                                   # salva
+    session.commit()
+    session.refresh(log)
+    return {"mensagem": "Histórico de status registrado", "log": log}

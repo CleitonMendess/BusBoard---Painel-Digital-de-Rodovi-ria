@@ -123,3 +123,13 @@ class Trip(Base):
 
 # executar a criação dos metadados do banco
 # Base.metadata.create_all(bind=db)
+
+class StatusLog(Base):                          # (A)
+    __tablename__ = "status_logs"               # (B)
+
+    id = Column(Integer, primary_key=True, index=True)                       # (C)
+    trip_id = Column(Integer, ForeignKey("trips.id"), nullable=False)        # (D)
+    old_status = Column(String, nullable=False)                              # (E)
+    new_status = Column(String, nullable=False)                              # (E)
+    changed_by = Column(Integer, ForeignKey("users.id"))                     # (F)
+    changed_at = Column(DateTime, default=datetime.utcnow, nullable=False)   # (G)

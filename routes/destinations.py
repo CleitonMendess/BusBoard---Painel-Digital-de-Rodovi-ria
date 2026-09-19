@@ -17,8 +17,8 @@ Essa é a rota padrão de destinos do nosso sistema. Todas as cidades e estados 
     """
     return{"mensagem": "Você está acessando a rota de destinos"}
 
-@destinations_router.post("/creat_destinations")
-async def creat_destinations(destinationsSchema: DestinationsSchema, session: Session = Depends(session_parametr)):
+@destinations_router.post("/create_destinations")
+async def create_destinations(destinationsSchema: DestinationsSchema, session: Session = Depends(session_parametr)):
     destination = session.query(Destination).filter(Destination.city == destinationsSchema.city and Destination.state == destinationsSchema.state ).first()
     if destination:
                 raise HTTPException(status_code=400, detail="Destino já cadastrado")

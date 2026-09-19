@@ -91,3 +91,11 @@ class TripResponseSchema(TripBaseSchema):
 
     class Config:
         from_attributes = True
+
+class StatusLogCreateSchema(BaseModel):
+    old_status: Optional[str] = None
+    new_status: str
+    changed_by: Optional[int] = None   # se não mandar, usa o user logado
+
+    class Config:
+        from_attributes = True
