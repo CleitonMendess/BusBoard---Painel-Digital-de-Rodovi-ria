@@ -485,3 +485,43 @@ Se quiser manter foco e não se perder:
 - prioridade para o que entrega valor real ao projeto
 
 Esse é o melhor caminho para você terminar sem entrar em ciclo de estudo infinito.
+
+
+## 2. Frontend: o que falta é o peso maior do projeto
+
+- Backend do MVP está em ~50-60%.
+- Frontend está em 0% e é ~60% do esforço restante.
+- Foco do frontend: **primeiro o painel público** (o que o sogro vê na TV),
+  depois o admin.
+
+### Ordem de aprendizado sugerida
+
+1. **HTML/CSS** — Gustavo Guanabara, "Curso em Vídeo" (HTML5 e CSS3, módulo 1)
+   - base antes de React, não pular.
+2. **React + TypeScript** — duas opções:
+   - Matheus Battisti ("Hora de Codar"): curso completo de React gratuito no
+     YouTube, em português, com projetos práticos (login, CRUDs).
+   - Hashtag Treinamentos: mesmo canal do curso de FastAPI; verificar se têm
+     playlist de React. É a didática já conhecida.
+3. **Aplicar direto no BusBoard** — login no React, depois o painel.
+
+### Dica que conecta ao projeto
+
+Assim como o curso de FastAPI usa pizzaria, procurar um curso de React que
+construa CRUD com login e trocar pizzaria por ônibus.
+
+### Quando mexer em quê (no BusBoard)
+
+- Dia 11/12 do plano: HTML/CSS + React + Vite + tela de login
+- Dia 20: painel público precisa dos endpoints `/board/departures` e
+  `/board/arrivals` — criar antes ou junto
+- Depois: WebSocket (Dia 21-23 do plano)
+
+---
+
+## 3. Resumo: próximo passo concreto
+
+1. Decidir a role (`commom` -> `operador` ou nova role)
+2. Implementar `PATCH /trips/{id}/horario` com autorização `{adm, operador}`
+3. Testar os 3 cenários da tabela acima
+4. Aí sim: HTML/CSS -> React -> login no front
