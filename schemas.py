@@ -99,3 +99,9 @@ class StatusLogCreateSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+class Shcema_Time(BaseModel):
+    scheduled_time: str
+    estimated_time: Optional[str] = None
+    class Config:
+        from_attributes = True
