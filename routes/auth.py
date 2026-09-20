@@ -66,14 +66,14 @@ async def create_user(
         raise HTTPException(status_code=400, detail="E-mail do usuário já cadastrado")
 
     # Se pedirem ADM, só deixa continuar quando o usuário logado também for ADM.
-    role_solicitado = (usuario.role or "commom").lower()
+    role_solicitado = (usuario.role or "operador").lower()
     if role_solicitado == "adm" and (not current_user or current_user.role != "adm"):
         raise HTTPException(
             status_code=403,
             detail="Apenas administradores podem criar contas Admin",
         )
 
-    role_final = "adm" if role_solicitado == "adm" else "commom"
+    role_final = "adm" if role_solicitado == "adm" else "operador"
 
     password_crypt = bcrypt_context.hash(usuario.password)
     new_user = User(usuario.name, usuario.email, password_crypt, role_final, usuario.active)
@@ -81,7 +81,7 @@ async def create_user(
     session.commit()
     return {"mensagem": f"Usuário cadastrado com sucesso {usuario.email}", "role": role_final}
 
-"""Alterar a role para adm ou commom"""
+"""Alterar a role para adm ou operador"""
 @auth_router.patch("/users/{user_id}/role")
 async def changes_role(role_shema: RoleSchema, user_id: int,
 session: Session = Depends(session_parametr),
@@ -97,7 +97,7 @@ current_user: User | None = Depends(verificar_token_opcional)):
     if not user:
         raise HTTPException(status_code=404, detail=" O usuário não encontrado")
     role_normalizada = role_shema.role.lower()
-    if role_normalizada not in {"adm", "commom"}:
+    if role_normalizada not in {"adm", "operador"}:
         raise HTTPException(status_code=400, detail="Role inválida")
 
     user.role = role_normalizada

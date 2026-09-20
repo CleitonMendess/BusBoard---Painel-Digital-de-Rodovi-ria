@@ -10,7 +10,7 @@ class UserSchema(BaseModel):
     name: str
     email: str
     password: str
-    role: Optional[str] = "commom"
+    role: Optional[str] = "operador"
     active: Optional[bool] = True
 
     class Config:
@@ -57,6 +57,7 @@ class RoleSchema(BaseModel):
 # Aqui ficam os campos que toda viagem tem em comum
 class TripBaseSchema(BaseModel):
     type: str  # tipo da viagem, ex: INTERESTADUAL, LOCAL, etc.
+    trip_direction: str  # SAIDA ou CHEGADA
     scheduled_time: str  # horário agendado da viagem
     estimated_time: Optional[str] = None  # tempo estimado de chegada
     status: Optional[str] = "AGENDADO"  # status inicial da viagem
@@ -71,6 +72,7 @@ class TripBaseSchema(BaseModel):
 # Schema principal para criar uma viagem
 class TripSchema(BaseModel):
     type: str
+    trip_direction: str
     scheduled_time: str
     estimated_time: Optional[str] = None
     status: Optional[str] = None

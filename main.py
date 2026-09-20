@@ -38,12 +38,14 @@ from routes.companies import companies_router
 from routes.destinations import destinations_router
 from routes.platforms import platforms_router
 from routes.trips import trips_router
+from routes.board import board_router
 
 app.include_router(auth_router)
 app.include_router(companies_router)
 app.include_router(destinations_router)
 app.include_router(platforms_router)
 app.include_router(trips_router)
+app.include_router(board_router)
 
 @app.get("/") 
 def home():

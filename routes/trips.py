@@ -23,6 +23,10 @@ user: User = Depends(verificar_token)):
     if user.role != "adm":
         raise HTTPException(status_code=403, detail="Você não tem autorização para criar viagens")
     
+    trip_direction = trip_schema.trip_direction.upper()
+    if trip_direction not in {"SAIDA", "CHEGADA"}:
+        raise HTTPException(status_code=400, detail="trip_direction deve ser SAIDA ou CHEGADA")
+
     company = session.query(Company).filter(Company.id == trip_schema.company_id).first()
     
     if not company:
@@ -42,6 +46,7 @@ user: User = Depends(verificar_token)):
         company_id=trip_schema.company_id,
         destination_id=trip_schema.destination_id,
         platform_id=trip_schema.platform_id,
+        trip_direction=trip_direction,
         estimated_time=trip_schema.estimated_time,
         status=trip_schema.status or "AGENDADO",
     )
@@ -79,7 +84,7 @@ session: Session = Depends(session_parametr),
     status_anterior = trip.status
     trip.status = status_normalizado
     session.add(StatusLog(trip_id=trip.id,
-    old_status=status_anterior,      # que foi lido ANTES de mudar
+    old_status=str(status_anterior),   # str() para guardar "AGENDADO" (era um objeto Choice)
     new_status=status_normalizado,
     changed_by=user.id,))
     session.commit()
@@ -88,7 +93,7 @@ session: Session = Depends(session_parametr),
     return {
         "mensagem": "Status da viagem atualizado com sucesso",
         "trip_id": trip.id,
-        "status_atual": trip.status,
+        "status_atual": str(trip.status),
     }
 
 @trips_router.get("/list")
@@ -99,12 +104,15 @@ async def list_trips(Session = Depends(session_parametr),user: User = Depends(ve
           trips = Session.query(Trip).all()
           return{"Viagens" : trips}
 
-@trips_router.patch("/time/{id_trips}")
+@trips_router.patch("/time/{id_trip}")
 async def time_trips(
 id_trip: int,
-time_trip = Shcema_Time,
+time_trip: Shcema_Time,
 session: Session = Depends(session_parametr),
 user: User = Depends(verificar_token)):
+
+    if user.role not in {"adm", "operador"}:
+        raise HTTPException(status_code=403, detail="Você não tem autorização para essa operação")
 
     trip = session.query(Trip).filter(Trip.id == id_trip).first()
     if not trip:

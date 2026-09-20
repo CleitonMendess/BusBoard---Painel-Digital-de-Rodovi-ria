@@ -24,13 +24,13 @@ class User(Base):
     name = Column(String, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
-    role = Column(String, nullable=False, default="commom")
+    role = Column(String, nullable=False, default="operador")
     active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     # cpf = Column(String, unique=True, index=True, nullable=False)
 
 
-    def __init__(self, name, email, password_hash, role="commom", active=True):
+    def __init__(self, name, email, password_hash, role="operador", active=True):
         self.name = name
         self.email = email
         self.password_hash = password_hash
@@ -98,6 +98,7 @@ class Trip(Base):
     company_id = Column("company_id", Integer, ForeignKey("companies.id"))
     destination_id = Column("destination_id", Integer, ForeignKey("destinations.id"))
     platform_id = Column("platform_id", Integer, ForeignKey("platforms.id"))
+    trip_direction = Column("trip_direction", String, nullable=False)
     company = relationship("Company")
     destination = relationship("Destination")
     platform = relationship("Platform")
@@ -109,6 +110,7 @@ class Trip(Base):
         company_id,
         destination_id,
         platform_id,
+        trip_direction,
         estimated_time=None,
         status="AGENDADO",
     ):
@@ -119,6 +121,7 @@ class Trip(Base):
         self.company_id = company_id
         self.destination_id = destination_id
         self.platform_id = platform_id
+        self.trip_direction = trip_direction
 
 
 # executar a criação dos metadados do banco
