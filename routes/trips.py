@@ -100,53 +100,21 @@ async def list_trips(Session = Depends(session_parametr),user: User = Depends(ve
           return{"Viagens" : trips}
 
 @trips_router.patch("/time/{id_trips}")
-async def time_trips(time_trip = Shcema_Time,
-session: Session = Depends(session_parametr),
-user: User = Depends(verificar_token, id_trip = str)):
-
-    trip = session.query(Trip).filter(Trip.id == id_trip).first()
-    if not trip:
-        raise HTTPException(status_code=404, detail="Viagem não encontrada")
-
-    session.commit()
-    session.refresh(trip)
-
-
-# =====================================================================
-# CÓDIGO CORRETO (substitua o bloco acima por este) — com explicações
-# =====================================================================
-# 1) O nome do parâmetro NA FUNÇÃO precisa ser igual ao {id_trip} da URL,
-#    senão o FastAPI não sabe de onde vem o id. Faltava: id_trip: int
-# 2) time_trip precisa de ":" + o TIPO (Shcema_Time) para o FastAPI
-#    entender que ele vem do body da requisição.
-#    Sem os dois pontos (": Shcema_Time"), vira só uma variável inútil.
-# 3) user: User = Depends(verificar_token) — retirar o "id_trip = str",
-#    pois verificar_token não tem esse parâmetro.
-# 4) Antes do commit, a gente PRECISA alterar o trip:
-#    trip.scheduled_time = ... ; senão o commit não muda nada.
-# 5) O updated_at é preenchido sozinho pelo onupdate (models.py:97)
-# 6) Só admin pode mudar horário, igual fazemos em status_trip.
-
-@trips_router.patch("/time/{id_trip}")
 async def time_trips(
-    id_trip: int,                             # id vem da URL "{id_trip}"
-    time_trip: Shcema_Time,                   # body da requisição
-    session: Session = Depends(session_parametr),
-    user: User = Depends(verificar_token),
-):
-    if user.role != "adm":                    # só admin pode alterar
-        raise HTTPException(status_code=403, detail="Você não tem autorização para essa operação")
+id_trip: int,
+time_trip = Shcema_Time,
+session: Session = Depends(session_parametr),
+user: User = Depends(verificar_token)):
 
     trip = session.query(Trip).filter(Trip.id == id_trip).first()
     if not trip:
         raise HTTPException(status_code=404, detail="Viagem não encontrada")
 
-    # AQUI é onde o horário realmente muda:
     trip.scheduled_time = time_trip.scheduled_time
     if time_trip.estimated_time:
         trip.estimated_time = time_trip.estimated_time
 
-    # commit grava as mudanças + preenche updated_at (onupdate)
+
     session.commit()
     session.refresh(trip)
 
@@ -156,11 +124,3 @@ async def time_trips(
         "scheduled_time": trip.scheduled_time,
         "estimated_time": trip.estimated_time,
     }
-
-
-# =====================================================================
-# OBS: o schema Shcema_Time (schemas.py) também precisa de correção:
-#     scheduled_time: str            ← faltava os dois pontos
-#     estimated_time: Optional[str]  ← para o bloco "if time_trip.estimated_time"
-# =====================================================================
-    
