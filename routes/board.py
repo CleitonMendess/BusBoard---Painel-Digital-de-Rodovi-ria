@@ -21,7 +21,7 @@ def formatar_viagem(trip):
 
 
 @board_router.get("/departures")
-async def departures(session: Session = Depends(session_parametr)):
+def departures(session: Session = Depends(session_parametr)):
     trips = (
         session.query(Trip)
         .filter(Trip.trip_direction == "SAIDA")
@@ -32,7 +32,7 @@ async def departures(session: Session = Depends(session_parametr)):
 
 
 @board_router.get("/arrivals")
-async def arrivals(session: Session = Depends(session_parametr)):
+def arrivals(session: Session = Depends(session_parametr)):
     trips = (
         session.query(Trip)
         .filter(Trip.trip_direction == "CHEGADA")
@@ -43,7 +43,7 @@ async def arrivals(session: Session = Depends(session_parametr)):
 
 
 @board_router.get("/active")
-async def active(session: Session = Depends(session_parametr)):
+def active(session: Session = Depends(session_parametr)):
     em_andamento = {"EMBARQUE", "NO HORARIO", "ATRASADO", "SAIU"}
     trips = (
         session.query(Trip)

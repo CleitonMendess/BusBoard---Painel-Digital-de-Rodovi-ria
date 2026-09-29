@@ -52,6 +52,20 @@ class RoleSchema(BaseModel):
     class Config:
         from_attributes = True
 
+#Ativar ou desativar um usuário
+class ActiveSchema(BaseModel):
+    active: bool
+
+    class Config:
+        from_attributes = True
+
+#Renovar a sessão: manda o refresh_token recebido no login
+class RefreshSchema(BaseModel):
+    refresh_token: str
+
+    class Config:
+        from_attributes = True
+
 
 # Base para qualquer schema de viagem
 # Aqui ficam os campos que toda viagem tem em comum
@@ -107,3 +121,31 @@ class Shcema_Time(BaseModel):
     estimated_time: Optional[str] = None
     class Config:
         from_attributes = True
+
+
+# ---- Schemas de edição parcial (só muda o que for enviado) ----
+class CompanyUpdateSchema(BaseModel):
+    name: Optional[str] = None
+    active: Optional[bool] = None
+
+
+class DestinationUpdateSchema(BaseModel):
+    city: Optional[str] = None
+    state: Optional[str] = None
+    active: Optional[bool] = None
+
+
+class PlatformUpdateSchema(BaseModel):
+    number: Optional[int] = None
+    active: Optional[bool] = None
+
+
+class TripUpdateSchema(BaseModel):
+    type: Optional[str] = None
+    trip_direction: Optional[str] = None
+    scheduled_time: Optional[str] = None
+    estimated_time: Optional[str] = None  # "" limpa a previsão
+    status: Optional[str] = None
+    company_id: Optional[int] = None
+    destination_id: Optional[int] = None
+    platform_id: Optional[int] = None

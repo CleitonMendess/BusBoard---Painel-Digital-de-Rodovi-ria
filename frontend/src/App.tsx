@@ -10,80 +10,27 @@ import {
   type Destination,
   type Platform,
 } from './api'
+import {
+  normalizeTrip,
+  parseTime,
+  readError,
+  statusClassMap,
+  type AdminTab,
+  type Notification,
+  type TripStatus,
+  type View,
+} from './comuns'
+import AbaUsuarios from './admin/AbaUsuarios'
+import AbaEmpresas from './admin/AbaEmpresas'
+import AbaDestinos from './admin/AbaDestinos'
+import AbaPlataformas from './admin/AbaPlataformas'
+import AbaViagens from './admin/AbaViagens'
 import './App.css'
 import OperatorPanel from './OperatorPanel'
 
-type TripDirection = 'SAIDA' | 'CHEGADA'
-type TripStatus =
-  | 'AGENDADO'
-  | 'NO HORARIO'
-  | 'EMBARQUE'
-  | 'ATRASADO'
-  | 'CANCELADO'
-  | 'SAIU'
-  | 'CHEGOU'
-
-type View = 'public' | 'login' | 'users' | 'companies' | 'destinations' | 'platforms' | 'trips'
-type AdminTab = 'overview' | 'users' | 'companies' | 'destinations' | 'platforms' | 'trips'
-
-type Notification = {
-  kind: 'success' | 'error'
-  message: string
-}
-
-const statusClassMap: Record<TripStatus, string> = {
-  AGENDADO: 'status-agendado',
-  'NO HORARIO': 'status-no-horario',
-  EMBARQUE: 'status-embarque',
-  ATRASADO: 'status-atrasado',
-  CANCELADO: 'status-cancelado',
-  SAIU: 'status-saiu',
-  CHEGOU: 'status-chegou',
-}
-
-const statusOptions: TripStatus[] = [
-  'AGENDADO',
-  'NO HORARIO',
-  'EMBARQUE',
-  'ATRASADO',
-  'CANCELADO',
-  'SAIU',
-  'CHEGOU',
-]
-
-const directionOptions: TripDirection[] = ['SAIDA', 'CHEGADA']
-
-const parseTime = (time: string) => {
-  if (!time) return Number.POSITIVE_INFINITY
-  const [hours, minutes] = time.split(':').map(Number)
-  return hours * 60 + minutes
-}
-
-const formatTime = (time: string | null | undefined) => time || '-'
-
-function normalizeTrip(t: Trip): Trip & { trip_direction: TripDirection } {
-  // /trips/list pode devolver o status como objeto {code, value}; converte pra texto
-  const raw: unknown = t.status
-  const status =
-    typeof raw === 'object' && raw !== null
-      ? String((raw as { code?: string }).code ?? '')
-      : String(raw ?? '')
-  return {
-    ...t,
-    status,
-    trip_direction: (t.trip_direction as TripDirection) || 'SAIDA',
-    estimated_time: t.estimated_time ?? null,
-  }
-}
-
-function readError(error: unknown, fallback: string) {
-  if (error instanceof Error) return error.message
-  return fallback
-}
-
 function App() {
   const [currentTime, setCurrentTime] = useState(new Date())
-  const [view, setView] = useState<View>('public')
+  const [view, setView] = useState<View>('login')
   const [adminTab, setAdminTab] = useState<AdminTab>('overview')
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [role, setRole] = useState<string | null>(getRole())
@@ -93,31 +40,6 @@ function App() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loginError, setLoginError] = useState('')
-
-  const [userForm, setUserForm] = useState({
-    name: '',
-    email: '',
-    password: '',
-    role: 'operador',
-    active: true,
-  })
-  const [companyName, setCompanyName] = useState('')
-  const [destinationForm, setDestinationForm] = useState({
-    city: '',
-    state: '',
-    active: true,
-  })
-  const [platformNumber, setPlatformNumber] = useState('')
-  const [tripForm, setTripForm] = useState({
-    type: 'INTERESTADUAL',
-    trip_direction: 'SAIDA' as TripDirection,
-    scheduled_time: '',
-    estimated_time: '',
-    status: 'AGENDADO' as TripStatus,
-    company_id: '',
-    destination_id: '',
-    platform_id: '',
-  })
 
   const [trips, setTrips] = useState<Trip[]>([])
   const [companies, setCompanies] = useState<Company[]>([])
@@ -145,6 +67,7 @@ function App() {
     if (nextView === 'destinations') setAdminTab('destinations')
     if (nextView === 'platforms') setAdminTab('platforms')
     if (nextView === 'trips') setAdminTab('trips')
+    if (nextView === 'operation') setAdminTab('operation')
   }
 
   const refreshAllAdminData = async () => {
@@ -255,7 +178,7 @@ function App() {
     try {
       const res = await api.auth.login(email, password)
       if (!res.role) throw new Error('O servidor não informou a função do usuário. Atualize o login no backend.')
-      saveSession(res.access_token, res.role)
+      saveSession(res.access_token, res.refresh_token, res.role)
       setRole(res.role)
       setIsAuthenticated(true)
       setView('users')
@@ -273,116 +196,10 @@ function App() {
     logout()
     setRole(null)
     setIsAuthenticated(false)
-    setView('public')
+    setView('login')
     setAdminTab('overview')
     setLoginError('')
     showNotification('success', 'Sessão encerrada')
-  }
-
-  async function handleCreateUser(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    try {
-      const result = await api.auth.createUser({
-        name: userForm.name,
-        email: userForm.email,
-        password: userForm.password,
-        role: userForm.role,
-        active: userForm.active,
-      })
-      showNotification('success', result.mensagem)
-      setUserForm({ name: '', email: '', password: '', role: 'operador', active: true })
-      await refreshAllAdminData()
-    } catch (e) {
-      showNotification('error', readError(e, 'Falha ao criar usuário'))
-    }
-  }
-
-  async function handleChangeRole(user: AppUser, newRole: string) {
-    const label = newRole === 'adm' ? 'Administrador' : 'Operador'
-    if (!window.confirm(`Mudar a função de ${user.name} para ${label}?`)) return
-    try {
-      const result = await api.auth.changeRole(user.id, newRole)
-      showNotification('success', result.mensagem)
-      await refreshAllAdminData()
-    } catch (e) {
-      showNotification('error', readError(e, 'Falha ao mudar função'))
-    }
-  }
-
-  async function handleCreateCompany(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    try {
-      const result = await api.companies.create({ name: companyName, active: true })
-      showNotification('success', result.mensagem)
-      setCompanyName('')
-      await refreshAllAdminData()
-    } catch (e) {
-      showNotification('error', readError(e, 'Falha ao criar empresa'))
-    }
-  }
-
-  async function handleCreateDestination(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    try {
-      const result = await api.destinations.create(destinationForm)
-      showNotification('success', result.mensagem)
-      setDestinationForm({ city: '', state: '', active: true })
-      await refreshAllAdminData()
-    } catch (e) {
-      showNotification('error', readError(e, 'Falha ao criar destino'))
-    }
-  }
-
-  async function handleCreatePlatform(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    try {
-      const result = await api.platforms.create({ number: Number(platformNumber), active: true })
-      showNotification('success', result.mensagem)
-      setPlatformNumber('')
-      await refreshAllAdminData()
-    } catch (e) {
-      showNotification('error', readError(e, 'Falha ao criar plataforma'))
-    }
-  }
-
-  async function handleCreateTrip(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    try {
-      const result = await api.trips.create({
-        type: tripForm.type,
-        trip_direction: tripForm.trip_direction,
-        scheduled_time: tripForm.scheduled_time,
-        estimated_time: tripForm.estimated_time || undefined,
-        status: tripForm.status,
-        company_id: Number(tripForm.company_id),
-        destination_id: Number(tripForm.destination_id),
-        platform_id: Number(tripForm.platform_id),
-      })
-      showNotification('success', result.mensagem)
-      setTripForm({
-        type: 'INTERESTADUAL',
-        trip_direction: 'SAIDA',
-        scheduled_time: '',
-        estimated_time: '',
-        status: 'AGENDADO',
-        company_id: '',
-        destination_id: '',
-        platform_id: '',
-      })
-      await refreshAllAdminData()
-    } catch (e) {
-      showNotification('error', readError(e, 'Falha ao criar viagem'))
-    }
-  }
-
-  async function handleChangeTripStatus(tripId: number, status: TripStatus) {
-    try {
-      const result = await api.trips.updateStatus(tripId, status)
-      showNotification('success', result.mensagem)
-      await refreshAllAdminData()
-    } catch (e) {
-      showNotification('error', readError(e, 'Falha ao atualizar status'))
-    }
   }
 
   const handleOpenAdminRoute = (target: AdminTab) => {
@@ -430,8 +247,8 @@ function App() {
               <button type="submit" className="primary-button">
                 Entrar
               </button>
-              <button type="button" className="ghost-button" onClick={() => navigate('public')}>
-                Voltar ao painel público
+              <button type="button" className="ghost-button" onClick={() => { window.location.href = '/painel' }}>
+                Ver painel da TV
               </button>
             </div>
           </form>
@@ -446,6 +263,9 @@ function App() {
         <aside className="admin-sidebar">
           <button className={adminTab === 'overview' ? 'sidebar-link active' : 'sidebar-link'} onClick={() => setAdminTab('overview')}>
             Visão geral
+          </button>
+          <button className={adminTab === 'operation' ? 'sidebar-link active' : 'sidebar-link'} onClick={() => handleOpenAdminRoute('operation')}>
+            Operação do dia
           </button>
           <button className={adminTab === 'users' ? 'sidebar-link active' : 'sidebar-link'} onClick={() => handleOpenAdminRoute('users')}>
             Usuários
@@ -477,8 +297,8 @@ function App() {
               <h2>Gestão operacional do BusBoard</h2>
             </div>
             <div className="form-actions compact">
-              <button type="button" className="ghost-button" onClick={() => navigate('public')}>
-                Ver painel público
+              <button type="button" className="ghost-button" onClick={() => window.open('/painel', '_blank')}>
+                Ver painel da TV
               </button>
               <button type="button" className="ghost-button" onClick={handleLogout}>
                 Sair
@@ -561,336 +381,48 @@ function App() {
               )}
 
               {adminTab === 'users' && (
-                <div className="route-grid">
-                  <form className="route-card form-card" onSubmit={handleCreateUser}>
-                    <div className="card-title-row">
-                      <h3>Criar usuário</h3>
-                    </div>
-
-                    <label>
-                      Nome
-                      <input value={userForm.name} onChange={(event) => setUserForm({ ...userForm, name: event.target.value })} required />
-                    </label>
-                    <label>
-                      E-mail
-                      <input type="email" value={userForm.email} onChange={(event) => setUserForm({ ...userForm, email: event.target.value })} required />
-                    </label>
-                    <label>
-                      Senha
-                      <input type="password" value={userForm.password} onChange={(event) => setUserForm({ ...userForm, password: event.target.value })} required />
-                    </label>
-                    <label>
-                      Função
-                      <select value={userForm.role} onChange={(event) => setUserForm({ ...userForm, role: event.target.value })}>
-                        <option value="operador">Operador</option>
-                        <option value="adm">Administrador</option>
-                      </select>
-                    </label>
-
-                    <label className="switch-row">
-                      <input
-                        type="checkbox"
-                        checked={userForm.active}
-                        onChange={(event) => setUserForm({ ...userForm, active: event.target.checked })}
-                      />
-                      Usuário ativo
-                    </label>
-
-                    <button className="primary-button" type="submit">Salvar usuário</button>
-                  </form>
-
-                  <div className="route-card table-wrap">
-                    <div className="card-title-row">
-                      <h3>Usuários cadastrados</h3>
-                    </div>
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Nome</th>
-                          <th>E-mail</th>
-                          <th>Função</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {users.map((user) => (
-                          <tr key={user.id}>
-                            <td>{user.name}</td>
-                            <td>{user.email}</td>
-                            <td>
-                              <select value={user.role} onChange={(event) => handleChangeRole(user, event.target.value)}>
-                                <option value="operador">Operador</option>
-                                <option value="adm">Administrador</option>
-                              </select>
-                            </td>
-                          </tr>
-                        ))}
-                        {users.length === 0 && (
-                          <tr><td colSpan={3}>Nenhum usuário listado</td></tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                <AbaUsuarios
+                  usuarios={users}
+                  showNotification={showNotification}
+                  refreshAllAdminData={refreshAllAdminData}
+                />
               )}
 
               {adminTab === 'companies' && (
-                <div className="route-grid">
-                  <form className="route-card form-card" onSubmit={handleCreateCompany}>
-                    <div className="card-title-row">
-                      <h3>Criar empresa</h3>
-                    </div>
-                    <label>
-                      Nome da empresa
-                      <input value={companyName} onChange={(event) => setCompanyName(event.target.value)} required />
-                    </label>
-                    <button className="primary-button" type="submit">Salvar empresa</button>
-                  </form>
-
-                  <div className="route-card table-wrap">
-                    <div className="card-title-row">
-                      <h3>Empresas cadastradas</h3>
-                    </div>
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>ID</th>
-                          <th>Nome</th>
-                          <th>Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {companies.map((company) => (
-                          <tr key={company.id}>
-                            <td>{company.id}</td>
-                            <td>{company.name}</td>
-                            <td>{company.active ? 'Ativa' : 'Inativa'}</td>
-                          </tr>
-                        ))}
-                        {companies.length === 0 && (
-                          <tr><td colSpan={3}>Nenhuma empresa cadastrada</td></tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                <AbaEmpresas
+                  empresas={companies}
+                  showNotification={showNotification}
+                  refreshAllAdminData={refreshAllAdminData}
+                />
               )}
 
               {adminTab === 'destinations' && (
-                <div className="route-grid">
-                  <form className="route-card form-card" onSubmit={handleCreateDestination}>
-                    <div className="card-title-row">
-                      <h3>Criar destino</h3>
-                    </div>
-                    <label>
-                      Cidade
-                      <input value={destinationForm.city} onChange={(event) => setDestinationForm({ ...destinationForm, city: event.target.value })} required />
-                    </label>
-                    <label>
-                      Estado
-                      <input value={destinationForm.state} onChange={(event) => setDestinationForm({ ...destinationForm, state: event.target.value })} required />
-                    </label>
-                    <label className="switch-row">
-                      <input
-                        type="checkbox"
-                        checked={destinationForm.active}
-                        onChange={(event) => setDestinationForm({ ...destinationForm, active: event.target.checked })}
-                      />
-                      Destino ativo
-                    </label>
-                    <button className="primary-button" type="submit">Salvar destino</button>
-                  </form>
-
-                  <div className="route-card table-wrap">
-                    <div className="card-title-row">
-                      <h3>Destinos cadastrados</h3>
-                    </div>
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>ID</th>
-                          <th>Cidade</th>
-                          <th>Estado</th>
-                          <th>Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {destinations.map((destination) => (
-                          <tr key={destination.id}>
-                            <td>{destination.id}</td>
-                            <td>{destination.city}</td>
-                            <td>{destination.state}</td>
-                            <td>{destination.active ? 'Ativo' : 'Inativo'}</td>
-                          </tr>
-                        ))}
-                        {destinations.length === 0 && (
-                          <tr><td colSpan={4}>Nenhum destino cadastrado</td></tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                <AbaDestinos
+                  destinos={destinations}
+                  showNotification={showNotification}
+                  refreshAllAdminData={refreshAllAdminData}
+                />
               )}
 
               {adminTab === 'platforms' && (
-                <div className="route-grid">
-                  <form className="route-card form-card" onSubmit={handleCreatePlatform}>
-                    <div className="card-title-row">
-                      <h3>Criar plataforma</h3>
-                    </div>
-                    <label>
-                      Número
-                      <input type="number" min="1" value={platformNumber} onChange={(event) => setPlatformNumber(event.target.value)} required />
-                    </label>
-                    <button className="primary-button" type="submit">Salvar plataforma</button>
-                  </form>
-
-                  <div className="route-card table-wrap">
-                    <div className="card-title-row">
-                      <h3>Plataformas cadastradas</h3>
-                    </div>
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>ID</th>
-                          <th>Número</th>
-                          <th>Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {platforms.map((platform) => (
-                          <tr key={platform.id}>
-                            <td>{platform.id}</td>
-                            <td>{platform.number}</td>
-                            <td>{platform.active ? 'Ativa' : 'Inativa'}</td>
-                          </tr>
-                        ))}
-                        {platforms.length === 0 && (
-                          <tr><td colSpan={3}>Nenhuma plataforma cadastrada</td></tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                <AbaPlataformas
+                  plataformas={platforms}
+                  showNotification={showNotification}
+                  refreshAllAdminData={refreshAllAdminData}
+                />
               )}
 
+              {adminTab === 'operation' && <OperatorPanel embedded />}
+
               {adminTab === 'trips' && (
-                <div className="route-grid trips-layout">
-                  <form className="route-card form-card" onSubmit={handleCreateTrip}>
-                    <div className="card-title-row">
-                      <h3>Criar viagem</h3>
-                    </div>
-                    <label>
-                      Tipo
-                      <input
-                        value={tripForm.type}
-                        onChange={(event) => setTripForm({ ...tripForm, type: event.target.value })}
-                        required
-                      />
-                    </label>
-                    <label>
-                      Direção
-                      <select
-                        value={tripForm.trip_direction}
-                        onChange={(event) => setTripForm({ ...tripForm, trip_direction: event.target.value as TripDirection })}
-                      >
-                        {directionOptions.map((direction) => (
-                          <option key={direction} value={direction}>{direction}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <label>
-                      Horário
-                      <input type="time" value={tripForm.scheduled_time} onChange={(event) => setTripForm({ ...tripForm, scheduled_time: event.target.value })} required />
-                    </label>
-                    <label>
-                      Previsão
-                      <input type="time" value={tripForm.estimated_time} onChange={(event) => setTripForm({ ...tripForm, estimated_time: event.target.value })} />
-                    </label>
-                    <label>
-                      Status
-                      <select value={tripForm.status} onChange={(event) => setTripForm({ ...tripForm, status: event.target.value as TripStatus })}>
-                        {statusOptions.map((status) => (
-                          <option key={status} value={status}>{status}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <label>
-                      Empresa
-                      <select value={tripForm.company_id} onChange={(event) => setTripForm({ ...tripForm, company_id: event.target.value })} required>
-                        <option value="">Selecione</option>
-                        {companies.map((company) => (
-                          <option key={company.id} value={company.id}>{company.name}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <label>
-                      Destino
-                      <select value={tripForm.destination_id} onChange={(event) => setTripForm({ ...tripForm, destination_id: event.target.value })} required>
-                        <option value="">Selecione</option>
-                        {destinations.map((destination) => (
-                          <option key={destination.id} value={destination.id}>{destination.city}/{destination.state}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <label>
-                      Plataforma
-                      <select value={tripForm.platform_id} onChange={(event) => setTripForm({ ...tripForm, platform_id: event.target.value })} required>
-                        <option value="">Selecione</option>
-                        {platforms.map((platform) => (
-                          <option key={platform.id} value={platform.id}>{platform.number}</option>
-                        ))}
-                      </select>
-                    </label>
-
-                    <button className="primary-button" type="submit">Salvar viagem</button>
-                  </form>
-
-                  <div className="route-card table-wrap trip-table-card">
-                    <div className="card-title-row">
-                      <h3>Viagens cadastradas</h3>
-                    </div>
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Tipo</th>
-                          <th>Horário</th>
-                          <th>Destino</th>
-                          <th>Plataforma</th>
-                          <th>Status</th>
-                          <th>Ação</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {trips.map((trip) => (
-                          <tr key={trip.trip_id ?? trip.id}>
-                            <td>{trip.type || '-'}</td>
-                            <td>{formatTime(trip.scheduled_time)}</td>
-                            <td>{trip.destination}</td>
-                            <td>{trip.platform}</td>
-                            <td>
-                              <span className={`status-badge ${statusClassMap[trip.status as TripStatus] || ''}`}>
-                                {trip.status}
-                              </span>
-                            </td>
-                            <td>
-                              <select
-                                value={trip.status}
-                                onChange={(event) => handleChangeTripStatus(trip.trip_id ?? trip.id ?? 0, event.target.value as TripStatus)}
-                              >
-                                {statusOptions.map((status) => (
-                                  <option key={status} value={status}>{status}</option>
-                                ))}
-                              </select>
-                            </td>
-                          </tr>
-                        ))}
-                        {trips.length === 0 && (
-                          <tr><td colSpan={6}>Nenhuma viagem cadastrada</td></tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                <AbaViagens
+                  viagens={trips}
+                  empresas={companies}
+                  destinos={destinations}
+                  plataformas={platforms}
+                  showNotification={showNotification}
+                  refreshAllAdminData={refreshAllAdminData}
+                />
               )}
             </>
           )}
@@ -925,40 +457,6 @@ function App() {
           )}
         </div>
       </header>
-
-      {!isOperator && (
-      <nav className="tab-nav" aria-label="Navegação principal">
-        <button
-          type="button"
-          className={view === 'public' ? 'tab-button active' : 'tab-button'}
-          onClick={() => navigate('public')}
-        >
-          Painel público
-        </button>
-        <button
-          type="button"
-          className={view !== 'public' ? 'tab-button active' : 'tab-button'}
-          onClick={() => navigate(isAuthenticated ? 'users' : 'login')}
-        >
-          Painel admin
-        </button>
-        <button type="button" className={view === 'users' ? 'tab-button active' : 'tab-button'} onClick={() => navigate(isAuthenticated ? 'users' : 'login')}>
-          Criar usuário
-        </button>
-        <button type="button" className={view === 'companies' ? 'tab-button active' : 'tab-button'} onClick={() => navigate(isAuthenticated ? 'companies' : 'login')}>
-          Empresas
-        </button>
-        <button type="button" className={view === 'destinations' ? 'tab-button active' : 'tab-button'} onClick={() => navigate(isAuthenticated ? 'destinations' : 'login')}>
-          Destinos
-        </button>
-        <button type="button" className={view === 'platforms' ? 'tab-button active' : 'tab-button'} onClick={() => navigate(isAuthenticated ? 'platforms' : 'login')}>
-          Plataformas
-        </button>
-        <button type="button" className={view === 'trips' ? 'tab-button active' : 'tab-button'} onClick={() => navigate(isAuthenticated ? 'trips' : 'login')}>
-          Viagens
-        </button>
-      </nav>
-      )}
 
       <main className="content-area">
         {view === 'public' && (

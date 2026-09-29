@@ -7,6 +7,8 @@ type Msg = { kind: 'success' | 'error'; text: string }
 
 const HIDDEN = ['SAIU', 'CHEGOU', 'CANCELADO']
 
+const STATUS_OPTIONS = ['AGENDADO', 'NO HORARIO', 'EMBARQUE', 'ATRASADO', 'CANCELADO', 'SAIU', 'CHEGOU']
+
 // Converte "08:30", "08:30:00" ou "2:15 PM" em "HH:MM" (formato do input type=time).
 function toInput(t?: string | null) {
   const m = t?.trim().match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?$/i)
@@ -18,11 +20,12 @@ function toInput(t?: string | null) {
   return `${String(h).padStart(2, '0')}:${m[2]}`
 }
 
-export default function OperatorPanel() {
+export default function OperatorPanel({ embedded = false }: { embedded?: boolean }) {
   const [rows, setRows] = useState<Row[]>([])
   const [edits, setEdits] = useState<Record<number, { scheduled: string; estimated: string }>>({})
   const [loading, setLoading] = useState(true)
   const [savingId, setSavingId] = useState<number | null>(null)
+  const [showFinished, setShowFinished] = useState(false)
   const [msg, setMsg] = useState<Msg | null>(null)
 
   const notify = (kind: Msg['kind'], text: string) => {
@@ -37,11 +40,7 @@ export default function OperatorPanel() {
         ...d.saidas.map((t) => ({ ...t, direction: 'Saída' as const })),
         ...a.chegadas.map((t) => ({ ...t, direction: 'Chegada' as const })),
       ]
-      setRows(
-        all
-          .filter((t) => !HIDDEN.includes(t.status))
-          .sort((x, y) => toInput(x.scheduled_time).localeCompare(toInput(y.scheduled_time))),
-      )
+      setRows(all.sort((x, y) => toInput(x.scheduled_time).localeCompare(toInput(y.scheduled_time))))
       setEdits({})
     } catch (e) {
       setMsg({ kind: 'error', text: e instanceof Error ? e.message : 'Erro ao carregar viagens' })
@@ -77,7 +76,7 @@ export default function OperatorPanel() {
     try {
       const res = await api.trips.updateTime(t.trip_id, {
         scheduled_time: v.scheduled,
-        estimated_time: v.estimated || undefined,
+        estimated_time: v.estimated, // vazio = tira a previsão
       })
       notify('success', res.mensagem)
       await load()
@@ -88,12 +87,28 @@ export default function OperatorPanel() {
     }
   }
 
+  async function changeStatus(t: Row, status: string) {
+    if (status === t.status) return
+    setSavingId(t.trip_id)
+    try {
+      const res = await api.trips.updateStatus(t.trip_id, status)
+      notify('success', `${t.destination}: ${res.status_atual}`)
+      await load()
+    } catch (e) {
+      notify('error', e instanceof Error ? e.message : 'Falha ao mudar status')
+    } finally {
+      setSavingId(null)
+    }
+  }
+
+  const visibleRows = showFinished ? rows : rows.filter((t) => !HIDDEN.includes(t.status))
+
   return (
     <section className="op-panel">
       <div className="admin-topline">
         <div>
-          <p className="eyebrow">Painel do operador</p>
-          <h2>Horários das viagens</h2>
+          <p className="eyebrow">{embedded ? 'Operação do dia' : 'Painel do operador'}</p>
+          <h2>Viagens de hoje</h2>
         </div>
         <button type="button" className="ghost-button" onClick={load}>
           Atualizar
@@ -101,6 +116,11 @@ export default function OperatorPanel() {
       </div>
 
       {msg && <div className={`notice ${msg.kind}`}>{msg.text}</div>}
+
+      <label className="op-toggle">
+        <input type="checkbox" checked={showFinished} onChange={(e) => setShowFinished(e.target.checked)} />
+        Mostrar viagens encerradas (saiu, chegou, cancelado)
+      </label>
 
       <div className="route-card table-wrap">
         {loading ? (
@@ -115,10 +135,11 @@ export default function OperatorPanel() {
                 <th>Horário</th>
                 <th>Previsão</th>
                 <th></th>
+                <th>Situação</th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((t) => (
+              {visibleRows.map((t) => (
                 <tr key={`${t.direction}-${t.trip_id}`}>
                   <td>{t.direction}</td>
                   <td>{t.destination}</td>
@@ -151,11 +172,24 @@ export default function OperatorPanel() {
                       {savingId === t.trip_id ? 'Salvando...' : 'Salvar'}
                     </button>
                   </td>
+                  <td>
+                    <select
+                      className={`op-time op-status op-status-${t.status.toLowerCase().replace(/\s+/g, '-')}`}
+                      value={t.status}
+                      disabled={savingId === t.trip_id}
+                      onChange={(e) => changeStatus(t, e.target.value)}
+                      aria-label={`Situação de ${t.destination}`}
+                    >
+                      {STATUS_OPTIONS.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </td>
                 </tr>
               ))}
-              {rows.length === 0 && (
+              {visibleRows.length === 0 && (
                 <tr>
-                  <td colSpan={6}>Nenhuma viagem para ajustar agora</td>
+                  <td colSpan={7}>Nenhuma viagem para ajustar agora</td>
                 </tr>
               )}
             </tbody>

@@ -372,6 +372,15 @@ th {
   grid-template-columns: 0.9fr 1.35fr;
 }
 
+/* a tabela de usuários tem mais colunas: dá mais espaço para ela */
+.route-grid.users-layout {
+  grid-template-columns: 0.8fr 1.6fr;
+}
+
+.route-grid.users-layout table {
+  min-width: 560px;
+}
+
 .list-card {
   list-style: none;
   margin: 0;

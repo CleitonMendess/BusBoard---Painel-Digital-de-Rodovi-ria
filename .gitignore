@@ -4,3 +4,12 @@ __pycache__
 .venv-windows/
 __pycache__/
 *.pyc
+
+# banco de dados local (dados de usuários não vão para o git)
+*.db
+
+# logs
+*.log
+
+# pytest
+.pytest_cache/

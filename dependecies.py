@@ -1,4 +1,3 @@
-
 '''Função com objetivo de criar uma sessão no BD e dar essa sessão uma resposta como parametro para ser usado no async def '''
 from fastapi import Depends, HTTPException
 from main import SECRET_KEY, ALGORITHM, oauth2_schema
@@ -27,6 +26,9 @@ def verificar_token(token: str = Depends(oauth2_schema), session: Session = Depe
     user = session.query(User).filter(User.id==user_id).first()
     if not user:
         raise HTTPException(status_code=401, detail="Acesso Inválido")
+    if user.active is False:
+        # usuário desativado: o token antigo deixa de valer na hora
+        raise HTTPException(status_code=401, detail="Usuário inativo")
     return user
 
 def verificar_admin(user: User = Depends(verificar_token)):

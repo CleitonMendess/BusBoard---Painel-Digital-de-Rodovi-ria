@@ -11,3 +11,10 @@
 }
 .op-time:focus-visible { outline: 2px solid #7dd3fc; outline-offset: 2px; }
 .op-panel button:disabled { opacity: 0.45; cursor: not-allowed; }
+.op-toggle { display: flex; align-items: center; gap: 0.6rem; color: #cbd5e1; font-size: 0.95rem; cursor: pointer; }
+.op-toggle input { width: 1.1rem; height: 1.1rem; accent-color: #7dd3fc; }
+.op-status { min-width: 9.5rem; font-weight: 700; }
+.op-status-embarque { color: #fde047; border-color: rgba(253, 224, 71, 0.55); }
+.op-status-atrasado { color: #fca5a5; border-color: rgba(248, 113, 113, 0.55); }
+.op-status-no-horario { color: #86efac; border-color: rgba(134, 239, 172, 0.45); }
+.op-status-cancelado { color: #94a3b8; border-color: rgba(148, 163, 184, 0.4); }

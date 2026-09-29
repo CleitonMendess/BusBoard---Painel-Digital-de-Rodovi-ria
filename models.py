@@ -136,3 +136,15 @@ class StatusLog(Base):                          # (A)
     new_status = Column(String, nullable=False)                              # (E)
     changed_by = Column(Integer, ForeignKey("users.id"))                     # (F)
     changed_at = Column(DateTime, default=datetime.utcnow, nullable=False)   # (G)
+
+
+class AppState(Base):
+    """Pequenos valores do sistema (ex.: qual foi o último dia em que a grade foi reiniciada)."""
+    __tablename__ = "app_state"
+
+    key = Column(String, primary_key=True)
+    value = Column(String, nullable=False)
+
+    def __init__(self, key, value):
+        self.key = key
+        self.value = value
