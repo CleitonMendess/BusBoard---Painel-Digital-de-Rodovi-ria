@@ -1,8 +1,21 @@
 """Reinício diário da grade de viagens (daily_reset)."""
+import logging
+import sqlite3
 from datetime import datetime
 
+import pytest
+
+import backup
 import daily_reset
 from models import AppState, Trip
+
+
+@pytest.fixture
+def pasta_backups(tmp_path):
+    """Pasta isolada para o backup do teste, sem encostar na pasta de verdade."""
+    pasta = tmp_path / "backups"
+    pasta.mkdir()
+    return pasta
 
 
 def marcar_dia(session, dia):
@@ -84,3 +97,45 @@ def test_reinicia_todas_as_viagens(session, viagem_criada):
 
     session.expire_all()
     assert {v.status for v in session.query(Trip).all()} == {"AGENDADO"}
+
+
+def test_reinicio_faz_o_backup_do_dia(session, viagem_criada, pasta_backups, monkeypatch):
+    """Virar o dia tira uma cópia do banco: é o retrato de como o dia fechou."""
+    monkeypatch.setattr(backup, "PASTA_PADRAO", str(pasta_backups))
+    viagem_criada.status = "CHEGOU"
+    session.commit()
+    marcar_dia(session, "2000-01-01")
+
+    assert daily_reset.executar_reinicio_se_preciso() is True
+
+    copias = list(pasta_backups.glob("banco-*.db"))
+    assert len(copias) == 1
+    with sqlite3.connect(copias[0]) as conn:
+        assert conn.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
+
+
+def test_backup_falho_nao_derruba_o_reinicio(session, viagem_criada, monkeypatch, caplog):
+    """O reset já foi feito; se a cópia falhar, o log explica e o app continua."""
+    def falhar(*args, **kwargs):
+        raise OSError("disco cheio")
+
+    monkeypatch.setattr(daily_reset, "criar_backup", falhar)
+    viagem_criada.status = "CHEGOU"
+    session.commit()
+    marcar_dia(session, "2000-01-01")
+
+    with caplog.at_level(logging.ERROR):
+        assert daily_reset.executar_reinicio_se_preciso() is True
+
+    session.expire_all()
+    assert session.get(Trip, viagem_criada.id).status == "AGENDADO"
+    assert "backup diário" in caplog.text
+
+
+def test_sem_reinicio_nao_ha_backup(session, viagem_criada, pasta_backups, monkeypatch):
+    """Backup a mais toparia encher o disco à toa: só copia quando vira o dia."""
+    monkeypatch.setattr(backup, "PASTA_PADRAO", str(pasta_backups))
+    marcar_dia(session, daily_reset.dia_operacional())
+
+    assert daily_reset.executar_reinicio_se_preciso() is False
+    assert list(pasta_backups.glob("banco-*.db")) == []

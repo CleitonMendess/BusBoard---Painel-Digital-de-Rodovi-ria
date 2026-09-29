@@ -18,6 +18,10 @@ from models import db, Trip, AppState
 
 log = logging.getLogger("busboard.reset")
 
+# uma cópia do banco por dia, logo depois de virar o dia. Vem depois do import
+# para não puxar o sqlite3 no caminho do primeiro admin (criar_admin.py).
+from backup import criar_backup  # noqa: E402
+
 RESET_HOUR = int(os.getenv("DAILY_RESET_HOUR", "3"))
 TZ_NAME = os.getenv("TZ_NAME", "America/Sao_Paulo")
 CHAVE_ULTIMO_DIA = "last_reset_day"
@@ -71,7 +75,16 @@ def executar_reinicio_se_preciso() -> bool:
             return False
         total = reiniciar_viagens(session)
         log.info("Reinício diário: %s viagens voltaram para AGENDADO", total)
+        _backup_do_dia()
         return True
+
+
+def _backup_do_dia() -> None:
+    """Copia o banco logo após virar o dia. Falha aqui não pode derrubar o reset."""
+    try:
+        criar_backup()
+    except Exception:
+        log.exception("Não consegui fazer o backup diário (o reinício em si já foi feito)")
 
 
 async def rodar_reinicio_diario():

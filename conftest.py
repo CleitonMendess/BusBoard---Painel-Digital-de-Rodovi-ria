@@ -12,6 +12,11 @@ os.environ.setdefault("SECRET_KEY", "segredo-apenas-para-teste-com-tamanho-sufic
 os.environ.setdefault("ALGORITHM", "HS256")
 os.environ.setdefault("ACCESS_TOKEN_EXPIRE_MINUTES", "30")
 os.environ.setdefault("DAILY_RESET_HOUR", "3")
+# os testes não devem escribir no log nem criar backups na pasta do projeto
+os.environ.setdefault("LOG_FILE", "")
+os.environ.setdefault(
+    "BACKUP_PASTA", os.path.join(tempfile.gettempdir(), "busboard_backups_teste")
+)
 
 import models
 from sqlalchemy import create_engine
