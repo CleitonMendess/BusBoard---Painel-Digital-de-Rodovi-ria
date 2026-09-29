@@ -1,10 +1,16 @@
+import os
 from datetime import datetime
+
+from dotenv import load_dotenv
 from sqlalchemy import create_engine, Column, String, Integer, Boolean, ForeignKey, DateTime
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy_utils.types import ChoiceType
 
-# conexão com o banco de dados
-db = create_engine("sqlite:///banco.db")
+load_dotenv()
+
+# conexão com o banco de dados. O mesmo valor que o Alembic usa (alembic/env.py),
+# para o app e as migrations não apontarem para bancos diferentes.
+db = create_engine(os.getenv("DATABASE_URL", "sqlite:///banco.db"))
 
 # base do banco de dados
 Base = declarative_base()

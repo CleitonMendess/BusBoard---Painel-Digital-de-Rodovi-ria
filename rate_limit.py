@@ -17,9 +17,25 @@ import os
 import threading
 import time
 
-MAX_TENTATIVAS = int(os.getenv("LOGIN_MAX_TENTATIVAS", "5"))
-JANELA_SEGUNDOS = int(os.getenv("LOGIN_JANELA_SEGUNDOS", "300"))
-BLOQUEIO_SEGUNDOS = int(os.getenv("LOGIN_BLOQUEIO_SEGUNDOS", "60"))
+def _int_env(nome: str, padrao: int, minimo: int = 1) -> int:
+    """Lê um inteiro do .env e reclama com clareza quando o valor não faz sentido."""
+    valor = (os.getenv(nome) or "").strip()
+    if not valor:
+        return padrao
+    try:
+        numero = int(valor)
+    except ValueError:
+        raise RuntimeError(
+            f"{nome}={valor!r} no .env não é um número inteiro"
+        ) from None
+    if numero < minimo:
+        raise RuntimeError(f"{nome}={numero} no .env precisa ser {minimo} ou maior")
+    return numero
+
+
+MAX_TENTATIVAS = _int_env("LOGIN_MAX_TENTATIVAS", 5)
+JANELA_SEGUNDOS = _int_env("LOGIN_JANELA_SEGUNDOS", 300)
+BLOQUEIO_SEGUNDOS = _int_env("LOGIN_BLOQUEIO_SEGUNDOS", 60)
 
 _tentativas: dict[str, list[float]] = {}
 _bloqueios: dict[str, float] = {}

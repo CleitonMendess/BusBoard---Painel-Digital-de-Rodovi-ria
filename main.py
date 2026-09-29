@@ -13,9 +13,54 @@ from daily_reset import rodar_reinicio_diario
 
 load_dotenv()
 
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = os.getenv("ALGORITHM")
-ACCESS_TOKEN_EXPIRE_MINUTES =  int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
+
+# ---------- configuração ----------
+# Falhar aqui, na hora de subir, é muito melhor do que derrubar uma requisição
+# no meio do expediente: config errada é problema de deploy, não de uso.
+ALGORITHMS_VALIDOS = {"HS256", "HS384", "HS512"}
+erros: dict[str, str] = {}
+
+
+def _texto(nome: str, padrao: str | None = None) -> str:
+    valor = (os.getenv(nome) or "").strip()
+    if not valor and padrao is None:
+        erros[nome] = "não está definida no .env"
+    return valor or (padrao or "")
+
+
+def _inteiro(nome: str, padrao: int | None = None) -> int:
+    valor = (os.getenv(nome) or "").strip()
+    if not valor:
+        if padrao is None:
+            erros[nome] = "não está definida no .env"
+            return 0
+        return padrao
+    try:
+        return int(valor)
+    except ValueError:
+        erros[nome] = f"vale {valor!r}, que não é um número inteiro"
+        return padrao or 0
+
+
+SECRET_KEY = _texto("SECRET_KEY")
+ALGORITHM = _texto("ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = _inteiro("ACCESS_TOKEN_EXPIRE_MINUTES")
+
+if SECRET_KEY and len(SECRET_KEY) < 32:
+    erros["SECRET_KEY"] = f"tem só {len(SECRET_KEY)} caracteres; use ao menos 32"
+if ALGORITHM not in ALGORITHMS_VALIDOS:
+    erros["ALGORITHM"] = f"vale {ALGORITHM!r}; use HS256, HS384 ou HS512"
+if "ACCESS_TOKEN_EXPIRE_MINUTES" not in erros and ACCESS_TOKEN_EXPIRE_MINUTES <= 0:
+    erros["ACCESS_TOKEN_EXPIRE_MINUTES"] = "tem que ser maior que zero"
+
+if erros:
+    detalhes = "\n".join(f"  - {chave}: {motivo}" for chave, motivo in erros.items())
+    raise RuntimeError(
+        f"Configuração inválida no .env:\n{detalhes}\n\n"
+        "Copie o .env.example para .env e ajuste. Para gerar uma chave boa:\n"
+        '  python -c "import secrets; print(secrets.token_hex(32))"'
+    )
+
 
 # De onde o front pode chamar a API. Em desenvolvimento o Vite faz proxy
 # (frontend/vite.config.ts) e o front roda em http://localhost:5173.

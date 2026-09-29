@@ -8,7 +8,7 @@ import os
 import tempfile
 from uuid import uuid4
 
-os.environ.setdefault("SECRET_KEY", "segredo-apenas-para-teste")
+os.environ.setdefault("SECRET_KEY", "segredo-apenas-para-teste-com-tamanho-suficiente")
 os.environ.setdefault("ALGORITHM", "HS256")
 os.environ.setdefault("ACCESS_TOKEN_EXPIRE_MINUTES", "30")
 os.environ.setdefault("DAILY_RESET_HOUR", "3")
