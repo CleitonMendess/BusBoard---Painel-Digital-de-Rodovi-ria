@@ -2,9 +2,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from models import User, StatusLog, db
 from dependecies import session_parametr, verificar_token, verificar_admin
-from main import bcrypt_context, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY
+from main import ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY
 from rate_limit import chave_login, registrar_falha, registrar_sucesso, tentar_login
 from schemas import UserSchema, LoginSchema, RoleSchema, ActiveSchema, RefreshSchema
+from senhas import gerar_hash, verificar_senha
 from sqlalchemy.orm import Session, sessionmaker
 from jose import jwt, JWTError
 from datetime import datetime, timedelta, timezone
@@ -45,7 +46,7 @@ def autenticar_user(email, password, session):
      user = session.query(User).filter(User.email==email).first()
      if not user:
             return False
-     elif not bcrypt_context.verify(password, user.password_hash):
+     elif not verificar_senha(password, user.password_hash):
           return False
      if user.active is False:
           raise HTTPException(status_code=403, detail="Usuário inativo. Fale com o administrador.")
@@ -80,7 +81,7 @@ def create_user(
 
     role_final = "adm" if role_solicitado == "adm" else "operador"
 
-    password_crypt = bcrypt_context.hash(usuario.password)
+    password_crypt = gerar_hash(usuario.password)
     new_user = User(usuario.name, usuario.email, password_crypt, role_final, usuario.active)
     session.add(new_user)
     session.commit()

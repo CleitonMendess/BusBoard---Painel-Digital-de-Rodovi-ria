@@ -18,8 +18,9 @@ import sys
 
 # Importar main valida o .env e confere se as tabelas existem (Alembic rodou?).
 # Se algo estiver errado, o erro sai aqui com a mensagem certa.
-from main import bcrypt_context
+import main  # noqa: F401  (o import valida a configuração)
 from models import User, db
+from senhas import gerar_hash
 from sqlalchemy.orm import sessionmaker
 
 TAMANHO_MINIMO_SENHA = 8
@@ -64,7 +65,7 @@ def main() -> int:
         sys.exit(f"'{args.email}' não parece um e-mail válido.")
 
     senha = ler_senha(args.senha)
-    hash_ = bcrypt_context.hash(senha)
+    hash_ = gerar_hash(senha)
 
     SessionLocal = sessionmaker(bind=db)
     with SessionLocal() as session:

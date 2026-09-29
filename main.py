@@ -11,7 +11,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.staticfiles import StaticFiles
-from passlib.context import CryptContext
 from sqlalchemy import text
 
 from models import db, Base
@@ -165,7 +164,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated = "auto")
 oauth2_schema = OAuth2PasswordBearer(tokenUrl="auth/login-form")
 
 

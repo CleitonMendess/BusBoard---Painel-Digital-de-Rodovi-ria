@@ -79,13 +79,13 @@ def email_de(user_id):
 
 def criar_usuario(role="operador", active=True, email=None, nome="Teste", senha="senha123"):
     """Cria um usuário direto no banco (evita o custo de hash a cada teste)."""
-    from main import bcrypt_context
+    from senhas import gerar_hash
 
     with SessionTeste() as s:
         usuario = models.User(
             nome,
             email or f"{role}-{uuid4().hex[:8]}@teste.com",
-            bcrypt_context.hash(senha),
+            gerar_hash(senha),
             role,
             active,
         )

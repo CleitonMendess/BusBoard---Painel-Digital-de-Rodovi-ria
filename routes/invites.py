@@ -18,11 +18,11 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from dependecies import session_parametr, verificar_admin
-from main import bcrypt_context
 from models import Invite, User
 from rate_limit import chave_login, registrar_falha, registrar_sucesso, tentar_login
 from routes.auth import create_token
 from schemas import InviteCheckSchema, InviteCreateSchema, InviteSchema, RegisterSchema
+from senhas import gerar_hash
 
 log = logging.getLogger("busboard.convites")
 
@@ -213,7 +213,7 @@ def registrar(dados: RegisterSchema, request: Request, session: Session = Depend
     novo = User(
         dados.name.strip(),
         email,
-        bcrypt_context.hash(dados.password),
+        gerar_hash(dados.password),
         convite.role,
         True,
     )

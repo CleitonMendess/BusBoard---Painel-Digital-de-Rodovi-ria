@@ -215,11 +215,11 @@ def test_ninguem_alem_do_adm_lista_convites(client, auth_operador):
 # ---------- o que o cadastro recusa ----------
 
 def test_email_ja_cadastrado(client, auth_adm, session):
-    from main import bcrypt_context
-    import models
+    from models import User
+    from senhas import gerar_hash
 
     session.add(
-        models.User("Joao", "maria@teste.com", bcrypt_context.hash("antiga123"), "operador", True)
+        User("Joao", "maria@teste.com", gerar_hash("antiga123"), "operador", True)
     )
     session.commit()
 

@@ -293,6 +293,7 @@ schemas.py         schemas de entrada e saída
 rate_limit.py      trava de tentativas de login
 daily_reset.py     reinício diário da grade
 backup.py          backup consistente do SQLite
+senhas.py           hash e verificação de senha (bcrypt direto)
 criar_admin.py     script de linha de comando para o primeiro admin
 dependecies.py     sessão do banco e dependências de autenticação
 conftest.py        fixtures e banco temporário dos testes
@@ -317,3 +318,8 @@ frontend/src/admin/  uma aba do painel por componente
   os dois precisam de store compartilhado, senão o limite de login dilui e o
   reinício pode disparar em paralelo.
 - Ainda não há Dockerfile; o caminho pronto é o systemd acima.
+- As senhas usam `bcrypt` direto, custo 12, em `senhas.py`. O `passlib` saiu:
+  ele não é mantido e não conseguia ler a versão do `bcrypt` 4.x. O formato do
+  hash é o mesmo, então quem já tinha conta continua entrando sem trocar a
+  senha. Antes de 72 bytes, a senha é passada por SHA-256 para o bcrypt não
+  ignorar o resto em silêncio.
