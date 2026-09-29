@@ -63,14 +63,34 @@ A senha é pedida no terminal. Para trocar a senha de uma conta que já existe
 python criar_admin.py --email admin@busboard.com --redefinir
 ```
 
-### 5. Frontend
+### 5. Convites (dar acesso a outras pessoas)
+
+A tela de login é só para entrar. Criar conta é por convite, então saber o
+endereço do painel não basta para virar usuário: é preciso o código que o
+administrador manda.
+
+1. Logado como `adm`, abra **Convites** no menu lateral.
+2. Escolha a função (operador ou administrador) e a validade, e clique em
+   **Gerar convite**.
+3. Copie o link e envie para a pessoa. O link fica
+   `http://<servidor>/cadastro/<código>`, e quem abrir preenche nome, e-mail e
+   senha, já entrando no sistema.
+
+O código aparece **uma vez só** e é de uso único. O banco guarda apenas o hash
+do código, então um dump do banco não serve para criar conta com convite
+pendente. Para tirar o convite do ar antes de ser usado, é só cancelar na
+mesma aba.
+
+`INVITE_VALIDADE_HORAS` no `.env` muda a validade padrão (72 h).
+
+### 6. Frontend
 
 ```bash
 cd frontend
 npm install
 ```
 
-### 6. Subir
+### 7. Subir
 
 Dois terminais. Na raiz, o backend:
 
@@ -256,7 +276,11 @@ basta. Se um dia rodar com várias instâncias, o lugar certo é o banco ou o Re
 ### Papéis
 
 - **operador** — mexe nas viagens e no painel de operação
-- **adm** — tudo, mais empresas, destinos, plataformas e usuários
+- **adm** — tudo, mais empresas, destinos, plataformas, usuários e convites
+
+Quem cria conta nova é sempre o `adm`, por convite. Sem ADM logado, a rota de
+criação de usuário só aceita `operador`, e o cadastro público só existe com um
+convite válido.
 
 ---
 
@@ -272,6 +296,7 @@ backup.py          backup consistente do SQLite
 criar_admin.py     script de linha de comando para o primeiro admin
 dependecies.py     sessão do banco e dependências de autenticação
 conftest.py        fixtures e banco temporário dos testes
+routes/invites.py  convites de cadastro (criar, checar, usar, cancelar)
 routes/            auth, companies, destinations, platforms, trips, board
 alembic/           migrations do schema
 tests/             suíte de testes

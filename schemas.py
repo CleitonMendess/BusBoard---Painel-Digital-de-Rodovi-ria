@@ -67,6 +67,48 @@ class RefreshSchema(BaseModel):
         from_attributes = True
 
 
+# ---------- Convites de cadastro ----------
+
+class InviteCreateSchema(BaseModel):
+    role: Optional[str] = "operador"
+    # em horas; se não vier, vale o padrão do .env
+    validade_horas: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
+
+class InviteSchema(BaseModel):
+    id: int
+    role: str
+    created_at: datetime
+    expires_at: datetime
+    used_at: Optional[datetime] = None
+    usado_por: Optional[str] = None
+    situacao: str
+
+    class Config:
+        from_attributes = True
+
+
+# Checagem do código: o front pergunta antes de mostrar o formulário
+class InviteCheckSchema(BaseModel):
+    valido: bool
+    role: Optional[str] = None
+    motivo: Optional[str] = None
+
+
+class RegisterSchema(BaseModel):
+    """Cadastro feito por quem recebeu o convite."""
+    token: str
+    name: str
+    email: str
+    password: str
+
+    class Config:
+        from_attributes = True
+
+
 # Base para qualquer schema de viagem
 # Aqui ficam os campos que toda viagem tem em comum
 class TripBaseSchema(BaseModel):

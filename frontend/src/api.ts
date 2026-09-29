@@ -113,6 +113,35 @@ export const api = {
       }),
   },
 
+  invites: {
+    create: (role: string, validadeHoras?: number) =>
+      request<CreatedInvite>('/auth/invites', {
+        method: 'POST',
+        body: JSON.stringify({ role, validade_horas: validadeHoras }),
+      }),
+    list: () => request<{ Convites: Invite[] }>('/auth/invites'),
+    cancel: (inviteId: number) =>
+      request<{ mensagem: string; id: number }>(`/auth/invites/${inviteId}`, {
+        method: 'DELETE',
+      }),
+    check: (token: string) =>
+      request<InviteCheck>(`/auth/invites/${encodeURIComponent(token)}`),
+  },
+
+  // o cadastro por convite não usa `request` de propósito: quem ainda não tem
+  // sessão não tem token, e um 401 aqui tem que virar mensagem na tela, não
+  // limpeza de sessão com reload
+  register: (data: { token: string; name: string; email: string; password: string }) =>
+    fetch(`${API_BASE}/auth/registrar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }).then(async (res) => {
+      const corpo = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(corpo.detail || `HTTP ${res.status}`)
+      return corpo as RegisterResult
+    }),
+
   board: {
     departures: () => request<{ saidas: Trip[] }>('/board/departures'),
     arrivals: () => request<{ chegadas: Trip[] }>('/board/arrivals'),
@@ -231,6 +260,40 @@ export interface AppUser {
   email: string;
   role: string;
   active: boolean;
+}
+
+export interface Invite {
+  id: number;
+  role: string;
+  created_at: string;
+  expires_at: string;
+  used_at: string | null;
+  usado_por: string | null;
+  situacao: 'pendente' | 'usado' | 'expirado';
+}
+
+/** Resposta da criação: é a única vez que o código aparece. */
+export interface CreatedInvite {
+  id: number;
+  token: string;
+  role: string;
+  expires_at: string;
+  link: string;
+  aviso: string;
+}
+
+export interface InviteCheck {
+  valido: boolean;
+  role?: string;
+  motivo?: string;
+}
+
+export interface RegisterResult {
+  mensagem: string;
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+  role: string;
 }
 
 export interface Company {

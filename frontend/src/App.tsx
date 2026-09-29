@@ -21,6 +21,7 @@ import {
   type View,
 } from './comuns'
 import AbaUsuarios from './admin/AbaUsuarios'
+import AbaConvites from './admin/AbaConvites'
 import AbaEmpresas from './admin/AbaEmpresas'
 import AbaDestinos from './admin/AbaDestinos'
 import AbaPlataformas from './admin/AbaPlataformas'
@@ -251,6 +252,11 @@ function App() {
                 Ver painel da TV
               </button>
             </div>
+
+            <p className="login-hint">
+              Recebeu um convite para criar conta?{' '}
+              <a href="/cadastro">Clique aqui</a>.
+            </p>
           </form>
         </div>
       )
@@ -269,6 +275,9 @@ function App() {
           </button>
           <button className={adminTab === 'users' ? 'sidebar-link active' : 'sidebar-link'} onClick={() => handleOpenAdminRoute('users')}>
             Usuários
+          </button>
+          <button className={adminTab === 'convites' ? 'sidebar-link active' : 'sidebar-link'} onClick={() => handleOpenAdminRoute('convites')}>
+            Convites
           </button>
           <button className={adminTab === 'companies' ? 'sidebar-link active' : 'sidebar-link'} onClick={() => handleOpenAdminRoute('companies')}>
             Empresas
@@ -383,6 +392,13 @@ function App() {
               {adminTab === 'users' && (
                 <AbaUsuarios
                   usuarios={users}
+                  showNotification={showNotification}
+                  refreshAllAdminData={refreshAllAdminData}
+                />
+              )}
+
+              {adminTab === 'convites' && (
+                <AbaConvites
                   showNotification={showNotification}
                   refreshAllAdminData={refreshAllAdminData}
                 />

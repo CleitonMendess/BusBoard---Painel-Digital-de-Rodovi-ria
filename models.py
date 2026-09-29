@@ -144,6 +144,34 @@ class StatusLog(Base):                          # (A)
     changed_at = Column(DateTime, default=datetime.utcnow, nullable=False)   # (G)
 
 
+class Invite(Base):
+    """Convite para criar conta.
+
+    Existe porque a tela de login é só para entrar: cadastro aberto deixaria
+    qualquer pessoa com o endereço da rodoviária criar a própria conta. Quem
+    convida é o administrador, e o convite expira e é de uso único.
+
+    Guarda só o hash do código, não o código: se o banco vazar, os convites
+    pendientes não dão conta pronta para ninguém.
+    """
+    __tablename__ = "invites"
+
+    id = Column(Integer, primary_key=True, index=True)
+    token_hash = Column(String, unique=True, index=True, nullable=False)
+    role = Column(String, nullable=False, default="operador")
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    used_at = Column(DateTime, nullable=True)
+    used_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+
+    def __init__(self, token_hash, role, created_by, expires_at):
+        self.token_hash = token_hash
+        self.role = role
+        self.created_by = created_by
+        self.expires_at = expires_at
+
+
 class AppState(Base):
     """Pequenos valores do sistema (ex.: qual foi o último dia em que a grade foi reiniciada)."""
     __tablename__ = "app_state"

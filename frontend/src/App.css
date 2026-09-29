@@ -508,6 +508,33 @@ th {
   border-style: dashed;
 }
 
+.login-hint {
+  color: #9ca3af;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0 0 4px;
+}
+
+.login-hint strong {
+  color: #e5e7eb;
+}
+
+.invite-novo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.invite-novo code {
+  word-break: break-all;
+  font-size: 0.8rem;
+  color: #ccfbf1;
+}
+
+.invite-novo small {
+  color: #9ca3af;
+}
+
 .login-error,
 .error-banner,
 .notice {

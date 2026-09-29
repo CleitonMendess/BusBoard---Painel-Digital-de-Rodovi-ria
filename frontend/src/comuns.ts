@@ -12,9 +12,9 @@ export type TripStatus =
   | 'SAIU'
   | 'CHEGOU'
 
-export type View = 'public' | 'login' | 'users' | 'companies' | 'destinations' | 'platforms' | 'trips' | 'operation'
+export type View = 'public' | 'login' | 'users' | 'convites' | 'companies' | 'destinations' | 'platforms' | 'trips' | 'operation'
 
-export type AdminTab = 'overview' | 'operation' | 'users' | 'companies' | 'destinations' | 'platforms' | 'trips'
+export type AdminTab = 'overview' | 'operation' | 'users' | 'convites' | 'companies' | 'destinations' | 'platforms' | 'trips'
 
 export type Notification = {
   kind: 'success' | 'error'

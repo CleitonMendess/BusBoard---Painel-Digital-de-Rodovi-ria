@@ -196,8 +196,10 @@ from routes.destinations import destinations_router
 from routes.platforms import platforms_router
 from routes.trips import trips_router
 from routes.board import board_router
+from routes.invites import invites_router
 
 app.include_router(auth_router)
+app.include_router(invites_router)
 app.include_router(companies_router)
 app.include_router(destinations_router)
 app.include_router(platforms_router)
@@ -266,6 +268,15 @@ def montar_front(app: FastAPI, pasta: Path) -> bool:
 
     app.add_api_route("/", painel_admin, methods=["GET"], include_in_schema=False)
     app.add_api_route("/painel", painel_tv, methods=["GET"], include_in_schema=False)
+    # /cadastro/<codigo> é o link que o ADM manda para quem vai criar a conta.
+    # O código tem um trecho só (o token_urlsafe não usa "/"), então uma rota
+    # com um parâmetro resolve.
+    app.add_api_route(
+        "/cadastro/{token}",
+        painel_admin,
+        methods=["GET"],
+        include_in_schema=False,
+    )
     # favicon.svg, icons.svg e qualquer outro arquivo solto do dist
     app.mount(
         "/",
