@@ -1,7 +1,7 @@
 # auth.py → login e autenticação
 from fastapi import APIRouter, Depends, HTTPException
 from models import User, db
-from dependecies import session_parametr, verificar_token
+from dependecies import session_parametr, verificar_token, verificar_admin
 from main import bcrypt_context, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY
 from schemas import UserSchema, LoginSchema, RoleSchema
 from sqlalchemy.orm import Session, sessionmaker
@@ -121,8 +121,9 @@ async def login (login_schema: LoginSchema, session: Session = Depends(session_p
          access_token = create_token(user.id)
          refresh_token = create_token(user.id, duracao_token=timedelta(days=7))
          return{"access_token": access_token,
-                "refresh_token": refresh_token, #dura 7 dias
-                "token_type" : "Bearer"}
+                 "refresh_token": refresh_token,
+                "token_type": "Bearer",
+                "role": user.role}
 
 
 
@@ -145,5 +146,16 @@ async def user_refresh_token(user: User = Depends(verificar_token)):
     access_token = create_token(user.id)
     return{"access_token": access_token,
             "token_type" : "Bearer"}
+
+@auth_router.get("/users")
+async def list_users(
+    session: Session = Depends(session_parametr),
+    current_user: User = Depends(verificar_admin),
+):
+    users = session.query(User).all()
+    return {"Usuarios": [
+        {"id": u.id, "name": u.name, "email": u.email, "role": u.role, "active": u.active}
+        for u in users
+    ]}
 
 

@@ -97,12 +97,22 @@ session: Session = Depends(session_parametr),
     }
 
 @trips_router.get("/list")
-async def list_trips(Session = Depends(session_parametr),user: User = Depends(verificar_admin) ):
-     if user.role != "adm":
-          raise HTTPException(status_code=403, detail="Você não tem autorização para essa operação")
-     else:
-          trips = Session.query(Trip).all()
-          return{"Viagens" : trips}
+async def list_trips(Session = Depends(session_parametr), user: User = Depends(verificar_admin)):
+    trips = Session.query(Trip).all()
+    return {"Viagens": [
+        {
+            "trip_id": t.id,
+            "type": t.type,
+            "trip_direction": t.trip_direction,
+            "company": t.company.name if t.company else None,
+            "destination": t.destination.city if t.destination else None,
+            "platform": t.platform.number if t.platform else None,
+            "scheduled_time": t.scheduled_time,
+            "estimated_time": t.estimated_time,
+            "status": str(t.status),
+        }
+        for t in trips
+    ]}
 
 @trips_router.patch("/time/{id_trip}")
 async def time_trips(
@@ -132,3 +142,16 @@ user: User = Depends(verificar_token)):
         "scheduled_time": trip.scheduled_time,
         "estimated_time": trip.estimated_time,
     }
+
+@trips_router.delete("/{trip_id}")
+async def delete_trip(
+     trip_id: int,
+     user: User = Depends(verificar_admin),
+     session: Session = Depends(session_parametr),):
+     trip = session.query(Trip).filter(Trip.id == trip_id).first()
+     if not trip:
+          raise HTTPException(status_code=404, detail="Viagem não encontrada")
+     company_name = trip.company.name if trip.company else "desconhecida"
+     session.delete(trip)
+     session.commit()
+     return{"mensagem": f"Viagem da companhia {company_name} excluida com sucesso"}

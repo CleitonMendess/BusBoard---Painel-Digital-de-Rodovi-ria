@@ -6,6 +6,16 @@ function getToken(): string | null {
 
 function clearToken() {
   localStorage.removeItem('access_token');
+  localStorage.removeItem('role');
+}
+
+export function getRole(): string | null {
+  return localStorage.getItem('role');
+}
+
+export function saveSession(token: string, role: string) {
+  localStorage.setItem('access_token', token);
+  localStorage.setItem('role', role);
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -42,7 +52,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 export const api = {
   auth: {
     login: (email: string, password: string) =>
-      request<{ access_token: string; refresh_token: string; token_type: string }>('/auth/login', {
+      request<{ access_token: string; refresh_token: string; token_type: string; role?: string }>('/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       }),
@@ -55,6 +65,7 @@ export const api = {
       request<{ access_token: string; token_type: string }>('/auth/refresh', {
         method: 'GET',
       }),
+    listUsers: () => request<{ Usuarios: AppUser[] }>('/auth/users'),
     changeRole: (userId: number, role: string) =>
       request<{ mensagem: string; user_id: number; role_atual: string }>(`/auth/users/${userId}/role`, {
         method: 'PATCH',
@@ -76,9 +87,8 @@ export const api = {
         body: JSON.stringify(data),
       }),
     updateStatus: (id: number, status: string) =>
-      request<{ mensagem: string; trip_id: number; status_atual: string }>(`/trips/status/${id}`, {
+      request<{ mensagem: string; trip_id: number; status_atual: string }>(`/trips/status/${id}?status=${encodeURIComponent(status)}`, {
         method: 'PATCH',
-        body: JSON.stringify({ status }),
       }),
     updateTime: (id: number, data: { scheduled_time: string; estimated_time?: string }) =>
       request<{ mensagem: string; trip_id: number; scheduled_time: string; estimated_time: string }>(`/trips/time/${id}`, {
@@ -134,6 +144,14 @@ export interface Trip {
   type?: string;
   trip_direction?: string;
   id?: number;
+}
+
+export interface AppUser {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  active: boolean;
 }
 
 export interface Company {

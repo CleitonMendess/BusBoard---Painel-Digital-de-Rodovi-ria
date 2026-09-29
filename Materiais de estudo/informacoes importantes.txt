@@ -15,4 +15,28 @@ Regras importantes
 
 '''Aula 4 aos 50 ele explica a logica de como alterar usuario e outras coisas'''
 
-por depois para admin mudar role
+por depois para admin mudar roleEu começaria o front agora, mas faria antes um pequeno ajuste no back para evitar problemas de integração:
+
+Corrigir o filtro de destinos duplicados em destinations.py.
+Adicionar CORS em main.py, para o React/Vite conseguir acessar a API.
+Restringir criação de destinos apenas ao administrador.
+Impedir login de usuários inativos em auth.py.
+Confirmar e documentar os formatos reais das respostas da API.
+Depois disso, desenvolva primeiro o painel público:
+
+tabela de partidas;
+tabela de chegadas;
+status das viagens;
+atualização automática por polling;
+layout responsivo para TV e computador.
+O back já possui endpoints suficientes para esse MVP: /board/departures, /board/arrivals e /board/active.
+
+Eu deixaria para uma segunda etapa:
+
+painel administrativo;
+WebSocket em tempo real;
+avisos;
+edição e exclusão de cadastros;
+migração definitiva para PostgreSQL;
+testes automatizados.
+Resumo: não continue expandindo o back sem validar o produto visualmente. Faça esse pequeno hardening e comece o frontend pelo painel público.

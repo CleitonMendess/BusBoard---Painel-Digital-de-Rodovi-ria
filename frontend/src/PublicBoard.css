@@ -1,0 +1,72 @@
+.tv {
+  --bg: #0a1c17;
+  --panel: #112d25;
+  --line: #24493d;
+  --text: #f4f1e4;
+  --muted: #8fb0a3;
+  --amber: #ffc21a;
+  --green: #62d795;
+  --red: #ff6a57;
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2em;
+  padding: 1.6em 2em;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Barlow Condensed', 'Arial Narrow', 'Roboto Condensed', sans-serif;
+  font-size: min(1.15vw, 2vh);
+  cursor: none;
+  overflow: hidden;
+}
+
+.tv-top { display: flex; align-items: baseline; gap: 1.2em; }
+.tv-clock { font-size: 4em; font-weight: 700; line-height: 1; color: var(--amber); font-variant-numeric: tabular-nums; }
+.tv-date { font-size: 1.6em; color: var(--muted); }
+.tv-date::first-letter { text-transform: uppercase; }
+.tv-offline { margin-left: auto; font-size: 1.3em; color: var(--bg); background: var(--red); padding: 0.2em 0.7em; border-radius: 0.2em; }
+
+.tv-boards { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 2em; }
+.tv-board { display: flex; flex-direction: column; min-height: 0; background: var(--panel); border: 2px solid var(--line); border-radius: 0.5em; overflow: hidden; }
+.tv-board-head { display: flex; justify-content: space-between; align-items: center; padding: 0.4em 0.9em; background: var(--amber); color: var(--bg); }
+.tv-board-head h2 { margin: 0; font-size: 2.4em; line-height: 1.1; font-weight: 700; }
+.tv-pages { font-size: 1.6em; font-weight: 600; }
+
+.tv-cols, .tv-row { display: grid; grid-template-columns: 6.5em 1fr 5em 8em; align-items: center; column-gap: 1em; padding: 0 0.9em; }
+.tv-cols { padding-top: 0.6em; padding-bottom: 0.5em; color: var(--muted); border-bottom: 2px solid var(--line); }
+.tv-cols span { font-size: 1.2em; }
+.tv-cols span:nth-child(3) { text-align: center; }
+
+.tv-rows { flex: 1; min-height: 0; margin: 0; padding: 0; list-style: none; display: grid; grid-template-rows: repeat(8, 1fr); }
+.tv-row { border-bottom: 1px solid var(--line); }
+.tv-row:last-child { border-bottom: 0; }
+.tv-time { font-size: 1.7em; display: flex; flex-direction: column; line-height: 1; font-variant-numeric: tabular-nums; }
+.tv-time b { font-size: 1.35em; font-weight: 700; }
+.tv-time s { font-size: 0.6em; color: var(--muted); }
+.tv-dest { font-size: 1.7em; display: flex; flex-direction: column; line-height: 1.05; min-width: 0; }
+.tv-dest b { font-size: 1.15em; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tv-dest small { font-size: 0.65em; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tv-plat { justify-self: center; display: grid; place-items: center; width: 1.6em; height: 1.6em; background: var(--text); color: var(--bg); font-size: 2.2em; font-weight: 700; border-radius: 0.2em; }
+.tv-status { font-size: 1.45em; font-weight: 600; }
+
+.tv-empty { display: grid; place-items: center; grid-row: 1 / -1; font-size: 1.6em; color: var(--muted); }
+
+.tv-no-horario .tv-status { color: var(--green); }
+.tv-agendado .tv-status { color: var(--muted); }
+.tv-atrasado .tv-time b, .tv-atrasado .tv-status { color: var(--red); }
+.tv-cancelado { opacity: 0.6; }
+.tv-cancelado .tv-status { color: var(--red); }
+.tv-cancelado .tv-dest b { text-decoration: line-through; }
+.tv-embarque { background: rgba(255, 194, 26, 0.14); }
+.tv-embarque .tv-status { color: var(--amber); animation: tv-blink 1.4s steps(2, jump-none) infinite; }
+
+@keyframes tv-blink { 50% { opacity: 0.25; } }
+@media (prefers-reduced-motion: reduce) { .tv-embarque .tv-status { animation: none; } }
+
+@media (max-width: 900px) {
+  .tv { position: static; min-height: 100vh; font-size: 3.2vw; overflow: auto; }
+  .tv-boards { grid-template-columns: 1fr; }
+  .tv-rows { grid-template-rows: none; }
+  .tv-row { padding-top: 0.4em; padding-bottom: 0.4em; }
+}

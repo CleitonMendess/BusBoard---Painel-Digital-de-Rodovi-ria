@@ -1,0 +1,13 @@
+.op-panel { display: grid; gap: 1.2rem; }
+.op-panel .table-wrap { overflow-x: auto; }
+.op-time {
+  min-width: 7.5rem;
+  padding: 0.55rem 0.7rem;
+  background: rgba(2, 6, 23, 0.6);
+  color: #e2e8f0;
+  border: 1px solid rgba(125, 211, 252, 0.25);
+  border-radius: 10px;
+  font: inherit;
+}
+.op-time:focus-visible { outline: 2px solid #7dd3fc; outline-offset: 2px; }
+.op-panel button:disabled { opacity: 0.45; cursor: not-allowed; }

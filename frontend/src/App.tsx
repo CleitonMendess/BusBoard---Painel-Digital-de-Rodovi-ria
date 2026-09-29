@@ -2,12 +2,16 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   api,
   logout,
+  getRole,
+  saveSession,
   type Trip,
+  type AppUser,
   type Company,
   type Destination,
   type Platform,
 } from './api'
 import './App.css'
+import OperatorPanel from './OperatorPanel'
 
 type TripDirection = 'SAIDA' | 'CHEGADA'
 type TripStatus =
@@ -58,8 +62,15 @@ const parseTime = (time: string) => {
 const formatTime = (time: string | null | undefined) => time || '-'
 
 function normalizeTrip(t: Trip): Trip & { trip_direction: TripDirection } {
+  // /trips/list pode devolver o status como objeto {code, value}; converte pra texto
+  const raw: unknown = t.status
+  const status =
+    typeof raw === 'object' && raw !== null
+      ? String((raw as { code?: string }).code ?? '')
+      : String(raw ?? '')
   return {
     ...t,
+    status,
     trip_direction: (t.trip_direction as TripDirection) || 'SAIDA',
     estimated_time: t.estimated_time ?? null,
   }
@@ -75,10 +86,12 @@ function App() {
   const [view, setView] = useState<View>('public')
   const [adminTab, setAdminTab] = useState<AdminTab>('overview')
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [role, setRole] = useState<string | null>(getRole())
+  const isOperator = isAuthenticated && role !== 'adm'
   const [notification, setNotification] = useState<Notification | null>(null)
 
-  const [email, setEmail] = useState('admin@busboard.com')
-  const [password, setPassword] = useState('123456')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [loginError, setLoginError] = useState('')
 
   const [userForm, setUserForm] = useState({
@@ -108,6 +121,7 @@ function App() {
 
   const [trips, setTrips] = useState<Trip[]>([])
   const [companies, setCompanies] = useState<Company[]>([])
+  const [users, setUsers] = useState<AppUser[]>([])
   const [destinations, setDestinations] = useState<Destination[]>([])
   const [platforms, setPlatforms] = useState<Platform[]>([])
   const [loading, setLoading] = useState(true)
@@ -153,8 +167,8 @@ function App() {
         api.board.arrivals(),
       ])
       const allTrips = [
-        ...depRes.saidas.map(normalizeTrip),
-        ...arrRes.chegadas.map(normalizeTrip),
+        ...depRes.saidas.map((t) => normalizeTrip({ ...t, trip_direction: 'SAIDA' })),
+        ...arrRes.chegadas.map((t) => normalizeTrip({ ...t, trip_direction: 'CHEGADA' })),
       ]
       setTrips(allTrips)
     } catch (e) {
@@ -167,12 +181,14 @@ function App() {
   async function fetchAdminData() {
     try {
       setError(null)
-      const [tripsRes, compRes, destRes, platRes] = await Promise.all([
+      const [tripsRes, compRes, destRes, platRes, usersRes] = await Promise.all([
         api.trips.list(),
         api.companies.list(),
         api.destinations.list(),
         api.platforms.list(),
+        api.auth.listUsers().catch(() => ({ Usuarios: [] as AppUser[] })),
       ])
+      setUsers(usersRes.Usuarios)
       setTrips(tripsRes.Viagens.map(normalizeTrip))
       setCompanies(compRes.Companhias)
       setDestinations(destRes.Destinos)
@@ -191,14 +207,16 @@ function App() {
       return () => clearInterval(interval)
     }
 
-    if (isAuthenticated) {
+    if (isAuthenticated && role === 'adm') {
       fetchAdminData()
     }
-  }, [view, isAuthenticated])
+  }, [view, isAuthenticated, role])
 
   useEffect(() => {
     const token = localStorage.getItem('access_token')
-    if (token) {
+    if (token && !getRole()) {
+      logout() // sessão antiga, sem função salva: pede login de novo
+    } else if (token) {
       setIsAuthenticated(true)
       setView('users')
       setAdminTab('overview')
@@ -236,12 +254,14 @@ function App() {
     setLoginError('')
     try {
       const res = await api.auth.login(email, password)
-      localStorage.setItem('access_token', res.access_token)
+      if (!res.role) throw new Error('O servidor não informou a função do usuário. Atualize o login no backend.')
+      saveSession(res.access_token, res.role)
+      setRole(res.role)
       setIsAuthenticated(true)
       setView('users')
       setAdminTab('overview')
       showNotification('success', 'Login realizado com sucesso')
-      await refreshAllAdminData()
+      if (res.role === 'adm') await refreshAllAdminData()
     } catch (e) {
       const message = readError(e, 'Credenciais inválidas')
       setLoginError(message)
@@ -251,6 +271,7 @@ function App() {
 
   function handleLogout() {
     logout()
+    setRole(null)
     setIsAuthenticated(false)
     setView('public')
     setAdminTab('overview')
@@ -273,6 +294,18 @@ function App() {
       await refreshAllAdminData()
     } catch (e) {
       showNotification('error', readError(e, 'Falha ao criar usuário'))
+    }
+  }
+
+  async function handleChangeRole(user: AppUser, newRole: string) {
+    const label = newRole === 'adm' ? 'Administrador' : 'Operador'
+    if (!window.confirm(`Mudar a função de ${user.name} para ${label}?`)) return
+    try {
+      const result = await api.auth.changeRole(user.id, newRole)
+      showNotification('success', result.mensagem)
+      await refreshAllAdminData()
+    } catch (e) {
+      showNotification('error', readError(e, 'Falha ao mudar função'))
     }
   }
 
@@ -405,6 +438,8 @@ function App() {
         </div>
       )
     }
+
+    if (isOperator) return <OperatorPanel />
 
     return (
       <section className="admin-layout">
@@ -564,13 +599,36 @@ function App() {
                     <button className="primary-button" type="submit">Salvar usuário</button>
                   </form>
 
-                  <div className="route-card info-card">
-                    <h3>Regras do cadastro</h3>
-                    <p>O backend permite criar administradores apenas quando você já estiver autenticado como adm.</p>
-                    <div className="data-list">
-                      <span>Total de usuários visíveis</span>
-                      <strong>Gerenciado pelo backend</strong>
+                  <div className="route-card table-wrap">
+                    <div className="card-title-row">
+                      <h3>Usuários cadastrados</h3>
                     </div>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Nome</th>
+                          <th>E-mail</th>
+                          <th>Função</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {users.map((user) => (
+                          <tr key={user.id}>
+                            <td>{user.name}</td>
+                            <td>{user.email}</td>
+                            <td>
+                              <select value={user.role} onChange={(event) => handleChangeRole(user, event.target.value)}>
+                                <option value="operador">Operador</option>
+                                <option value="adm">Administrador</option>
+                              </select>
+                            </td>
+                          </tr>
+                        ))}
+                        {users.length === 0 && (
+                          <tr><td colSpan={3}>Nenhum usuário listado</td></tr>
+                        )}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               )}
@@ -816,7 +874,7 @@ function App() {
                             </td>
                             <td>
                               <select
-                                defaultValue={trip.status}
+                                value={trip.status}
                                 onChange={(event) => handleChangeTripStatus(trip.trip_id ?? trip.id ?? 0, event.target.value as TripStatus)}
                               >
                                 {statusOptions.map((status) => (
@@ -868,6 +926,7 @@ function App() {
         </div>
       </header>
 
+      {!isOperator && (
       <nav className="tab-nav" aria-label="Navegação principal">
         <button
           type="button"
@@ -899,6 +958,7 @@ function App() {
           Viagens
         </button>
       </nav>
+      )}
 
       <main className="content-area">
         {view === 'public' && (
