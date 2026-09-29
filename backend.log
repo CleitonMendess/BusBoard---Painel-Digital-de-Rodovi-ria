@@ -1,0 +1,204 @@
+INFO:     Will watch for changes in these directories: ['/Users/kreito_mendes/Documents/BusBoard — Painel Digital de Rodoviária']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [23593] using WatchFiles
+INFO:     Started server process [23596]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:50556 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50571 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50571 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50573 - "OPTIONS /board/departures HTTP/1.1" 405 Method Not Allowed
+INFO:     127.0.0.1:50574 - "OPTIONS /board/arrivals HTTP/1.1" 405 Method Not Allowed
+INFO:     127.0.0.1:50581 - "OPTIONS /board/departures HTTP/1.1" 405 Method Not Allowed
+INFO:     127.0.0.1:50582 - "OPTIONS /board/arrivals HTTP/1.1" 405 Method Not Allowed
+INFO:     127.0.0.1:50583 - "OPTIONS /board/departures HTTP/1.1" 405 Method Not Allowed
+INFO:     127.0.0.1:50584 - "OPTIONS /board/arrivals HTTP/1.1" 405 Method Not Allowed
+INFO:     127.0.0.1:50586 - "OPTIONS /auth/login HTTP/1.1" 405 Method Not Allowed
+INFO:     127.0.0.1:50588 - "OPTIONS /auth/login HTTP/1.1" 405 Method Not Allowed
+INFO:     127.0.0.1:50588 - "OPTIONS /auth/login HTTP/1.1" 405 Method Not Allowed
+INFO:     127.0.0.1:50590 - "OPTIONS /auth/login HTTP/1.1" 405 Method Not Allowed
+INFO:     127.0.0.1:50594 - "POST /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50610 - "POST /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50614 - "POST /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50622 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50623 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50624 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50625 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50627 - "POST /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50630 - "GET /trips/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50633 - "GET /companies/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50634 - "GET /destinations/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50635 - "GET /platforms/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50642 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50641 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50644 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50643 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50647 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50648 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50653 - "GET /trips/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50655 - "GET /destinations/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50656 - "GET /platforms/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50654 - "GET /companies/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50663 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50665 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50667 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50668 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50669 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50670 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50674 - "GET /trips/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50676 - "GET /companies/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50677 - "GET /destinations/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50678 - "GET /platforms/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50686 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50688 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50687 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50689 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50690 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50691 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50694 - "GET /trips/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50697 - "GET /companies/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50698 - "GET /destinations/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50699 - "GET /platforms/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50869 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50870 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50871 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50872 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50875 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50876 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50881 - "GET /trips/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50882 - "GET /companies/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50883 - "GET /destinations/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50884 - "GET /platforms/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50892 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50893 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50894 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50895 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50896 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50897 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50900 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50901 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50904 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50905 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50917 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50918 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50923 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50924 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50927 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50928 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50933 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50934 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50949 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50950 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50953 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50954 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50994 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50995 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51066 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51067 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51070 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51071 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51074 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51075 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51078 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51079 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51083 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51084 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51089 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51090 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51146 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51147 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51157 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51158 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51248 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51249 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51285 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51286 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51330 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51331 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51399 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51400 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51481 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51482 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51562 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51563 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51631 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51632 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53582 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53583 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53591 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53592 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53599 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53600 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53601 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53602 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53606 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53605 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53614 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53613 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53616 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53615 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53619 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53620 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53627 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53628 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53629 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53630 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53633 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53634 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53636 - "GET /auth HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:53638 - "GET /auth/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53640 - "GET /auth/login HTTP/1.1" 405 Method Not Allowed
+INFO:     127.0.0.1:53642 - "GET /auth/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53642 - "GET /auth/creat_user HTTP/1.1" 405 Method Not Allowed
+INFO:     127.0.0.1:53647 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53652 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53653 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53655 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53654 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53656 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53661 - "GET /trips/list HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:53662 - "GET /companies/list HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:53663 - "GET /destinations/list HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:53664 - "GET /platforms/list HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:53671 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53672 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53673 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53674 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53675 - "POST /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53678 - "GET /trips/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53682 - "GET /destinations/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53683 - "GET /platforms/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53681 - "GET /companies/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53714 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53717 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53716 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53718 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53719 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53720 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53723 - "GET /trips/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53726 - "GET /companies/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53727 - "GET /destinations/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53728 - "GET /platforms/list HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53736 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53737 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53738 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53739 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53741 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53740 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53744 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53745 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53748 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53749 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53753 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53754 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53757 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53758 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53763 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53764 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53769 - "GET /board/departures HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53770 - "GET /board/arrivals HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [23596]
+INFO:     Stopping reloader process [23593]
