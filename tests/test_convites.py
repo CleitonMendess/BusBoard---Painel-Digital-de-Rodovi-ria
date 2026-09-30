@@ -4,8 +4,9 @@ A tela de login e so para entrar; criar conta exige um codigo que so o
 administrador tem. Estes testes cuidam para o codigo nao virar uma porta
 aberta: uso unico, validade, e nenhum caminho sem ADM.
 """
-from datetime import datetime, timedelta
+from datetime import timedelta
 
+from datas import agora_utc
 import models
 
 
@@ -140,7 +141,7 @@ def test_convite_inexistente(client):
 def test_convite_expirado(client, auth_adm, session):
     token = criar_convite(client, auth_adm, validade_horas=1).json()["token"]
     convite = session.query(models.Invite).one()
-    convite.expires_at = datetime.utcnow() - timedelta(minutes=1)
+    convite.expires_at = agora_utc() - timedelta(minutes=1)
     session.commit()
 
     resposta = registrar(client, token)

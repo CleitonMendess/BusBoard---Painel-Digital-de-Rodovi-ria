@@ -1,10 +1,11 @@
 import os
-from datetime import datetime
 
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, Column, String, Integer, Boolean, ForeignKey, DateTime
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy_utils.types import ChoiceType
+
+from datas import agora_utc
 
 load_dotenv()
 
@@ -32,7 +33,7 @@ class User(Base):
     password_hash = Column(String, nullable=False)
     role = Column(String, nullable=False, default="operador")
     active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=agora_utc, nullable=False)
     # cpf = Column(String, unique=True, index=True, nullable=False)
 
 
@@ -50,7 +51,7 @@ class Company(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=agora_utc, nullable=False)
 
     def __init__(self, name, active=True):
         self.name = name
@@ -99,8 +100,8 @@ class Trip(Base):
     scheduled_time = Column("scheduled_time", String, nullable=False)
     estimated_time = Column("estimated_time", String, nullable=True)
     status = Column("status", ChoiceType(choices=STATUS_TRIP), default="AGENDADO")
-    created_at = Column("created_at", DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column("updated_at", DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column("created_at", DateTime, default=agora_utc, nullable=False)
+    updated_at = Column("updated_at", DateTime, default=agora_utc, onupdate=agora_utc, nullable=False)
     company_id = Column("company_id", Integer, ForeignKey("companies.id"))
     destination_id = Column("destination_id", Integer, ForeignKey("destinations.id"))
     platform_id = Column("platform_id", Integer, ForeignKey("platforms.id"))
@@ -141,7 +142,7 @@ class StatusLog(Base):                          # (A)
     old_status = Column(String, nullable=False)                              # (E)
     new_status = Column(String, nullable=False)                              # (E)
     changed_by = Column(Integer, ForeignKey("users.id"))                     # (F)
-    changed_at = Column(DateTime, default=datetime.utcnow, nullable=False)   # (G)
+    changed_at = Column(DateTime, default=agora_utc, nullable=False)     # (G)
 
 
 class Invite(Base):
@@ -160,7 +161,7 @@ class Invite(Base):
     token_hash = Column(String, unique=True, index=True, nullable=False)
     role = Column(String, nullable=False, default="operador")
     created_by = Column(Integer, ForeignKey("users.id"), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=agora_utc, nullable=False)
     expires_at = Column(DateTime, nullable=False)
     used_at = Column(DateTime, nullable=True)
     used_by = Column(Integer, ForeignKey("users.id"), nullable=True)

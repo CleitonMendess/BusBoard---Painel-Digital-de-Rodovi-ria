@@ -18,6 +18,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from dependecies import session_parametr, verificar_admin
+from datas import agora_utc
 from models import Invite, User
 from rate_limit import chave_login, registrar_falha, registrar_sucesso, tentar_login
 from routes.auth import create_token
@@ -39,7 +40,9 @@ def _hash(token: str) -> str:
 
 
 def _situacao(convite: Invite, agora: datetime | None = None) -> str:
-    momento = agora or datetime.utcnow()
+    # agora_utc() (e não datetime.now()) porque expires_at volta do banco sem
+    # fuso: comparar data com fuso contra data sem fuso estoura TypeError.
+    momento = agora or agora_utc()
     if convite.used_at is not None:
         return "usado"
     if convite.expires_at <= momento:
@@ -94,7 +97,7 @@ def criar_convite(
         )
 
     token = secrets.token_urlsafe(24)
-    agora = datetime.utcnow()
+    agora = agora_utc()
     convite = Invite(
         token_hash=_hash(token),
         role=role,
@@ -127,7 +130,7 @@ def listar_convites(
     current_user: User = Depends(verificar_admin),
 ):
     """Convites mais novos primeiro, para o admin ver o que ainda vale."""
-    agora = datetime.utcnow()
+    agora = agora_utc()
     convites = (
         session.query(Invite)
         .order_by(Invite.created_at.desc(), Invite.id.desc())
@@ -221,7 +224,7 @@ def registrar(dados: RegisterSchema, request: Request, session: Session = Depend
     session.commit()
     session.refresh(novo)
 
-    agora = datetime.utcnow()
+    agora = agora_utc()
     convite.used_at = agora
     convite.used_by = novo.id
     session.commit()

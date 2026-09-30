@@ -293,7 +293,8 @@ schemas.py         schemas de entrada e saída
 rate_limit.py      trava de tentativas de login
 daily_reset.py     reinício diário da grade
 backup.py          backup consistente do SQLite
-senhas.py           hash e verificação de senha (bcrypt direto)
+senhas.py          hash e verificação de senha (bcrypt direto)
+datas.py           o "agora" do sistema (UTC sem fuso) e a regra de fuso
 criar_admin.py     script de linha de comando para o primeiro admin
 dependecies.py     sessão do banco e dependências de autenticação
 conftest.py        fixtures e banco temporário dos testes
@@ -323,3 +324,12 @@ frontend/src/admin/  uma aba do painel por componente
   hash é o mesmo, então quem já tinha conta continua entrando sem trocar a
   senha. Antes de 72 bytes, a senha é passada por SHA-256 para o bcrypt não
   ignorar o resto em silêncio.
+- **Datas: use `datas.agora_utc()`**, nunca `datetime.now()` e nunca
+  `datetime.utcnow()` (depreciado, some no Python futuro). O motivo não é
+  Freshman: o SQLite não guarda fuso horário, nem com `DateTime(timezone=True)`
+  — a data volta do banco sem `tzinfo`. Aí `datetime.now(UTC) > valor_do_banco`
+  estoura `can't compare offset-naive and offset-aware datetimes`, e o pior
+  lugar para isso acontecer é a validade do convite. `agora_utc()` devolve UTC
+  sem fuso, exatamente o formato que o `utcnow()` gravava: **nada a migrar**.
+  A exceção é o reinício diário, que pergunta "que dia é agora na rodoviária?"
+  e por isso usa fuso local (`daily_reset.LOCAL_TZ`, `TZ_NAME` no `.env`).
