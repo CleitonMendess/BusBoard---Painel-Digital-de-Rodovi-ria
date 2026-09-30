@@ -1,0 +1,89 @@
+name: CI
+
+# Roda a cada push e a cada PR. O objetivo aqui não é "teste passar", é pegar
+# o que só apareceria com o servidor no ar: migration fora do models, aviso
+# de depreciação e o front quebrado.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Não deixa duas execuções do mesmo push competirem (só vale a mais recente).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (pytest)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          # a mesma série da máquina de desenvolvimento (3.13)
+          python-version: "3.13"
+
+      - name: Instala as dependências
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r Requirements-dev.txt
+
+      - name: Sobe o schema do zero
+        # Recria o banco de um banco vazio: se alguma migration estiver
+        # quebrada, ou se o schema inicial não fechar, cai aqui. E é o que
+        # roda em produção quando o arquivo novo entra.
+        env:
+          DATABASE_URL: sqlite:///./banco.db
+        run: alembic upgrade head
+
+      - name: Confere que o app importa e o schema bate com os models
+        # O .env não vai para o git, e main.py recusa subir sem ele nem sem as
+        # tabelas. Aqui as variáveis vêm do ambiente, como o conftest.py faz
+        # para os testes — valores de mentira, o suficiente para o import
+        # passar. Pega import quebrado antes de gastar tempo na suite.
+        env:
+          SECRET_KEY: segredo-apenas-para-o-ci-com-tamanho-suficiente
+          ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+          ALGORITHM: HS256
+        run: |
+          python -c "import main"
+          python -m pytest tests/test_migrations.py
+
+      - name: Suite
+        # o pytest.ini trata DeprecationWarning como erro; os filtros de
+        # terceiro (do SQLAlchemy e do pytest) ficam ignorados, senão um aviso
+        # de biblioteca externa derruba o build
+        run: pytest
+
+  frontend:
+    name: Frontend (tsc, build, lint)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instala as dependências
+        run: npm ci
+
+      - name: Build e checagem de tipo
+        # o script de build já roda "tsc -b && vite build", então aqui já sai
+        # erro de tipo junto com o build
+        run: npm run build
+
+      - name: Lint
+        # hoje sai com aviso, não erro; se ficar com erro, o build quebra e
+        # é o comportamento desejado
+        run: npm run lint

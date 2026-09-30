@@ -130,6 +130,26 @@ npx tsc -b          # checagem de tipos
 npm run build       # build de produção
 ```
 
+### CI no GitHub
+
+`.github/workflows/ci.yml` roda a cada push na `main` e a cada PR, em dois
+jobs independentes:
+
+- **Backend** — `alembic upgrade head` num banco novo, `import main`, e a
+  suíte completa.
+- **Frontend** — `npm ci`, `npm run build` (que já checa os tipos) e
+  `npm run lint`.
+
+O `pytest.ini` trata `DeprecationWarning` como **erro**, não como aviso
+ignorado. Foi por isso que o `utcnow()` depreciado e o `class Config` do
+Pydantic ficaram meses sem ninguém ver: o filtro estava engolindo tudo. Se
+uma biblioteca de terceiros passar a reclamar, o filtro em `pytest.ini` é o
+lugar de liberar só aquela regra, com o motivo escrito ao lado.
+
+Os passos foram testados numa cópia limpa do repositório, sem `.env` e sem
+`banco.db` — o CI nunca vê os dois. O `.env` continua fora do git, e o
+workflow injeta valores de mentira só para o import passar.
+
 ---
 
 ## Como o sistema se comporta
