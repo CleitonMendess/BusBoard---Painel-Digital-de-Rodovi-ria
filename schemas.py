@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 # Schema de usuário
@@ -13,58 +13,50 @@ class UserSchema(BaseModel):
     role: Optional[str] = "operador"
     active: Optional[bool] = True
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 #Companhias
 class CompanySchema(BaseModel):
     name: str
     active: Optional[bool] = True
 
-    class Config: 
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class DestinationsSchema(BaseModel):
     city: str
     state: str
     active: Optional[bool]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class PlatformsSchema(BaseModel):
     number: int
     active: Optional[bool]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class LoginSchema(BaseModel):
     email: str
     password: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class RoleSchema(BaseModel):
     role: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 #Ativar ou desativar um usuário
 class ActiveSchema(BaseModel):
     active: bool
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 #Renovar a sessão: manda o refresh_token recebido no login
 class RefreshSchema(BaseModel):
     refresh_token: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ---------- Convites de cadastro ----------
@@ -74,8 +66,7 @@ class InviteCreateSchema(BaseModel):
     # em horas; se não vier, vale o padrão do .env
     validade_horas: Optional[int] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class InviteSchema(BaseModel):
@@ -87,8 +78,7 @@ class InviteSchema(BaseModel):
     usado_por: Optional[str] = None
     situacao: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Checagem do código: o front pergunta antes de mostrar o formulário
@@ -105,8 +95,7 @@ class RegisterSchema(BaseModel):
     email: str
     password: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Base para qualquer schema de viagem
@@ -121,8 +110,7 @@ class TripBaseSchema(BaseModel):
     destination_id: int  # destino da viagem
     platform_id: int  # plataforma da rodoviária
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Schema principal para criar uma viagem
@@ -136,8 +124,7 @@ class TripSchema(BaseModel):
     destination_id: Optional[int] = None
     platform_id: Optional[int] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Schema usado para responder a viagem ao cliente
@@ -147,22 +134,19 @@ class TripResponseSchema(TripBaseSchema):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class StatusLogCreateSchema(BaseModel):
     old_status: Optional[str] = None
     new_status: str
     changed_by: Optional[int] = None   # se não mandar, usa o user logado
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class Shcema_Time(BaseModel):
     scheduled_time: str
     estimated_time: Optional[str] = None
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ---- Schemas de edição parcial (só muda o que for enviado) ----
