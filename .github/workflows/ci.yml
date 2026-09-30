@@ -50,6 +50,9 @@ jobs:
           ACCESS_TOKEN_EXPIRE_MINUTES: "30"
           ALGORITHM: HS256
         run: |
+          # aviso esperado aqui: "Front não encontrado" é a mensagem normal
+          # neste job, porque o frontend é construído no job de baixo. Não é
+          # falha; o painel só existe depois do deploy.
           python -c "import main"
           python -m pytest tests/test_migrations.py
 

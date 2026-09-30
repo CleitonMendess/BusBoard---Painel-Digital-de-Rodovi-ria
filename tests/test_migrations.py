@@ -103,6 +103,19 @@ def _coluna(conn, tabela, nome):
     return None
 
 
+def _caminho_do_banco(config_alembic):
+    """O caminho do arquivo SQLite que o Alembic vai usar.
+
+    Não montar o caminho à mão com replace: o CI roda em Linux e o caminho
+    seria diferente do que os testes abrem (o teste passava escrevendo num
+    arquivo e lendo outro). O SQLAlchemy já sabe converter a URL.
+    """
+    from sqlalchemy.engine import make_url
+
+    caminho = make_url(config_alembic.get_main_option("sqlalchemy.url")).database
+    return pathlib.Path(caminho)
+
+
 def _criar_trips_nullable(banco):
     """Uma tabela trips no estado antigo: mesma estrutura, coluna nullable."""
     import sqlite3
@@ -154,8 +167,7 @@ def test_migration_torna_trip_direction_not_null(config_alembic):
     from alembic import command
     from sqlalchemy import create_engine
 
-    url = config_alembic.get_main_option("sqlalchemy.url")
-    banco = url.replace("sqlite:///", "").replace("/", "\\")
+    banco = _caminho_do_banco(config_alembic)
     _criar_trips_nullable(banco)
     _marcar_ate_a_migration_anterior(banco)
 
@@ -176,8 +188,7 @@ def test_migration_preserva_as_viagens(config_alembic):
     """A migration recria a tabela no SQLite; os dados têm que sobreviver."""
     from alembic import command
 
-    url = config_alembic.get_main_option("sqlalchemy.url")
-    banco = url.replace("sqlite:///", "").replace("/", "\\")
+    banco = _caminho_do_banco(config_alembic)
     _criar_trips_nullable(banco)
     _marcar_ate_a_migration_anterior(banco)
 
@@ -207,8 +218,7 @@ def test_migration_mantem_as_chaves_estrangeiras(config_alembic):
     """batch_alter_table reconstrói a tabela: as FKs podem se perder no meio."""
     from alembic import command
 
-    url = config_alembic.get_main_option("sqlalchemy.url")
-    banco = url.replace("sqlite:///", "").replace("/", "\\")
+    banco = _caminho_do_banco(config_alembic)
     _criar_trips_nullable(banco)
     _marcar_ate_a_migration_anterior(banco)
 
@@ -235,8 +245,7 @@ def test_migration_mantem_as_chaves_estrangeiras(config_alembic):
 def test_banco_recusa_viagem_sem_direcao_apos_a_migration(config_alembic):
     from alembic import command
 
-    url = config_alembic.get_main_option("sqlalchemy.url")
-    banco = url.replace("sqlite:///", "").replace("/", "\\")
+    banco = _caminho_do_banco(config_alembic)
     _criar_trips_nullable(banco)
     _marcar_ate_a_migration_anterior(banco)
 
@@ -269,8 +278,7 @@ def test_migration_recusa_dado_invalido_em_vez_de_apagar(config_alembic):
     """
     from alembic import command
 
-    url = config_alembic.get_main_option("sqlalchemy.url")
-    banco = url.replace("sqlite:///", "").replace("/", "\\")
+    banco = _caminho_do_banco(config_alembic)
     _criar_trips_nullable(banco)
     _marcar_ate_a_migration_anterior(banco)
 
@@ -294,8 +302,7 @@ def test_migration_recusa_dado_invalido_em_vez_de_apagar(config_alembic):
 def test_downgrade_da_migration_devolve_nullable(config_alembic):
     from alembic import command
 
-    url = config_alembic.get_main_option("sqlalchemy.url")
-    banco = url.replace("sqlite:///", "").replace("/", "\\")
+    banco = _caminho_do_banco(config_alembic)
     _criar_trips_nullable(banco)
     _marcar_ate_a_migration_anterior(banco)
 
@@ -319,8 +326,7 @@ def test_ciclo_upgrade_downgrade_upgrade(config_alembic):
     """Dá para reverter e reaplicar, que é o que acontece em deploy de volta."""
     from alembic import command
 
-    url = config_alembic.get_main_option("sqlalchemy.url")
-    banco = url.replace("sqlite:///", "").replace("/", "\\")
+    banco = _caminho_do_banco(config_alembic)
     _criar_trips_nullable(banco)
     _marcar_ate_a_migration_anterior(banco)
 
