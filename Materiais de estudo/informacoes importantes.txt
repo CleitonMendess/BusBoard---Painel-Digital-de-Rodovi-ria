@@ -2,6 +2,39 @@ Regras importantes
 
 1. Para executar o servidor, use: uvicorn main:app --reload
 2. Link local do servidor: http://127.0.0.1:8000
+=== PRODUÇÃO (front + API na porta 8000) ===
+
+1. Build do frontend:
+   cd frontend && npm run build
+
+2. Configurar .env (adicionar):
+   FRONTEND_DIST=frontend/dist
+   CORS_ORIGINS=http://localhost:8000
+   LOG_LEVEL=WARNING
+
+3. Migrations (se primeira vez):
+   alembic upgrade head
+
+4. Subir servidor:
+   uvicorn main:app --port 8000
+
+5. Acessar:
+   http://localhost:8000        → Painel admin
+   http://localhost:8000/painel → Painel TV (público)
+   http://localhost:8000/health → Health check
+
+=== DESENVOLVIMENTO (dois terminais) ===
+
+Terminal 1 - Backend:
+   source .venv/bin/activate
+   uvicorn main:app --reload --port 8000
+
+Terminal 2 - Frontend:
+   cd frontend && npm run dev
+   → http://localhost:5173
+
+
+   
 3. REST APIs:
 	- Get -> leitura/pegar
 	- Post -> Enviar/Criar
