@@ -28,6 +28,11 @@ user: User = Depends(verificar_token)):
     if trip_direction not in {"SAIDA", "CHEGADA"}:
         raise HTTPException(status_code=400, detail="trip_direction deve ser SAIDA ou CHEGADA")
 
+    tipo = trip_schema.type.upper()
+    tipos_validos = {"INTERESTADUAL", "ESTADUAL", "LOCAL", "INTERMUNICIPAL", "METROPOLITANO"}
+    if tipo not in tipos_validos:
+        raise HTTPException(status_code=400, detail="Tipo de viagem inválido")
+
     company = session.query(Company).filter(Company.id == trip_schema.company_id).first()
     
     if not company:
@@ -194,7 +199,11 @@ def update_trip(
         trip.platform_id = campos["platform_id"]
 
     if "type" in campos and campos["type"]:
-        trip.type = campos["type"]
+        tipo = campos["type"].upper()
+        tipos_validos = {"INTERESTADUAL", "ESTADUAL", "LOCAL", "INTERMUNICIPAL", "METROPOLITANO"}
+        if tipo not in tipos_validos:
+            raise HTTPException(status_code=400, detail="Tipo de viagem inválido")
+        trip.type = tipo
 
     if "scheduled_time" in campos and campos["scheduled_time"]:
         trip.scheduled_time = campos["scheduled_time"]

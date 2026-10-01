@@ -14,7 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 
 from models import db, Base
-from daily_reset import rodar_reinicio_diario
+from daily_reset import rodar_reinicio_diario, rodar_atualizacao_atrasados
 
 
 load_dotenv()
@@ -131,12 +131,15 @@ log.info("BusBoard iniciando (log em %s)", LOG_FILE or "apenas console")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # tarefa de fundo que reinicia a grade de viagens uma vez por dia
-    tarefa = asyncio.create_task(rodar_reinicio_diario())
-    log.info("Tarefa de reinício diário no ar")
+    tarefa_reset = asyncio.create_task(rodar_reinicio_diario())
+    # tarefa de fundo que atualiza viagens atrasadas a cada minuto
+    tarefa_atrasados = asyncio.create_task(rodar_atualizacao_atrasados())
+    log.info("Tarefas de fundo no ar (reset diário + atrasados)")
     try:
         yield
     finally:
-        tarefa.cancel()
+        tarefa_reset.cancel()
+        tarefa_atrasados.cancel()
     log.info("BusBoard encerrado")
 
 

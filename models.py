@@ -94,9 +94,17 @@ class Trip(Base):
         ("SAIU", "SAIU"),
         ("CHEGOU", "CHEGOU"),
     )
+
+    TRIP_TYPES = (
+        ("INTERESTADUAL", "Interestadual"),
+        ("ESTADUAL", "Estadual"),
+        ("LOCAL", "Local"),
+        ("INTERMUNICIPAL", "Intermunicipal"),
+        ("METROPOLITANO", "Metropolitano"),
+    )
     
     id = Column("id", Integer, primary_key=True, index=True)
-    type = Column("type", String, nullable=False)
+    type = Column("type", ChoiceType(choices=TRIP_TYPES), nullable=False)
     scheduled_time = Column("scheduled_time", String, nullable=False)
     estimated_time = Column("estimated_time", String, nullable=True)
     status = Column("status", ChoiceType(choices=STATUS_TRIP), default="AGENDADO")

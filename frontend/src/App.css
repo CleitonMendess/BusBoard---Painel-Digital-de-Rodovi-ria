@@ -264,8 +264,8 @@ th {
 }
 
 .status-atrasado {
-  background: rgba(245, 158, 11, 0.18);
-  color: #fde68a;
+  background: rgba(239, 68, 68, 0.18);
+  color: #fecaca;
 }
 
 .status-cancelado {

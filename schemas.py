@@ -1,7 +1,10 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Literal
 
 from pydantic import BaseModel, ConfigDict
+
+
+TripType = Literal["INTERESTADUAL", "ESTADUAL", "LOCAL", "INTERMUNICIPAL", "METROPOLITANO"]
 
 
 # Schema de usuário
@@ -101,7 +104,7 @@ class RegisterSchema(BaseModel):
 # Base para qualquer schema de viagem
 # Aqui ficam os campos que toda viagem tem em comum
 class TripBaseSchema(BaseModel):
-    type: str  # tipo da viagem, ex: INTERESTADUAL, LOCAL, etc.
+    type: TripType  # tipo da viagem
     trip_direction: str  # SAIDA ou CHEGADA
     scheduled_time: str  # horário agendado da viagem
     estimated_time: Optional[str] = None  # tempo estimado de chegada
@@ -115,7 +118,7 @@ class TripBaseSchema(BaseModel):
 
 # Schema principal para criar uma viagem
 class TripSchema(BaseModel):
-    type: str
+    type: TripType
     trip_direction: str
     scheduled_time: str
     estimated_time: Optional[str] = None
@@ -167,7 +170,7 @@ class PlatformUpdateSchema(BaseModel):
 
 
 class TripUpdateSchema(BaseModel):
-    type: Optional[str] = None
+    type: Optional[TripType] = None
     trip_direction: Optional[str] = None
     scheduled_time: Optional[str] = None
     estimated_time: Optional[str] = None  # "" limpa a previsão

@@ -43,6 +43,13 @@ export const statusOptions: TripStatus[] = [
 
 export const directionOptions: TripDirection[] = ['SAIDA', 'CHEGADA']
 
+export type TripType = 
+  'INTERESTADUAL' | 'ESTADUAL' | 'LOCAL' | 'INTERMUNICIPAL' | 'METROPOLITANO'
+
+export const typeOptions: TripType[] = [
+  'INTERESTADUAL', 'ESTADUAL', 'LOCAL', 'INTERMUNICIPAL', 'METROPOLITANO'
+]
+
 export const parseTime = (time: string) => {
   if (!time) return Number.POSITIVE_INFINITY
   const [hours, minutes] = time.split(':').map(Number)
@@ -52,15 +59,23 @@ export const parseTime = (time: string) => {
 export const formatTime = (time: string | null | undefined) => time || '-'
 
 export function normalizeTrip(t: Trip): Trip & { trip_direction: TripDirection } {
-  // /trips/list pode devolver o status como objeto {code, value}; converte pra texto
-  const raw: unknown = t.status
+  // /trips/list pode devolver status e type como objeto {code, value}; converte pra texto
+  const rawStatus: unknown = t.status
   const status =
-    typeof raw === 'object' && raw !== null
-      ? String((raw as { code?: string }).code ?? '')
-      : String(raw ?? '')
+    typeof rawStatus === 'object' && rawStatus !== null
+      ? String((rawStatus as { code?: string }).code ?? '')
+      : String(rawStatus ?? '')
+
+  const rawType: unknown = t.type
+  const type =
+    typeof rawType === 'object' && rawType !== null
+      ? String((rawType as { code?: string }).code ?? '')
+      : String(rawType ?? '')
+
   return {
     ...t,
     status,
+    type,
     trip_direction: (t.trip_direction as TripDirection) || 'SAIDA',
     estimated_time: t.estimated_time ?? null,
   }

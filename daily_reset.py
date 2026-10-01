@@ -7,6 +7,7 @@
 # Configuração opcional no .env:
 #   DAILY_RESET_HOUR=3            hora do reinício (0-23). Padrão: 3
 #   TZ_NAME=America/Sao_Paulo     fuso horário. Padrão: Brasília (UTC-3)
+#   DELAY_TOLERANCE_MINUTES=5     minutos após o horário para marcar ATRASADO. Padrão: 5
 import asyncio
 import logging
 import os
@@ -25,6 +26,7 @@ from backup import criar_backup  # noqa: E402
 RESET_HOUR = int(os.getenv("DAILY_RESET_HOUR", "3"))
 TZ_NAME = os.getenv("TZ_NAME", "America/Sao_Paulo")
 CHAVE_ULTIMO_DIA = "last_reset_day"
+DELAY_TOLERANCE_MINUTES = int(os.getenv("DELAY_TOLERANCE_MINUTES", "5"))
 
 try:
     from zoneinfo import ZoneInfo
@@ -51,6 +53,33 @@ def reiniciar_viagens(session) -> int:
     _gravar_dia(session, dia_operacional())
     session.commit()
     return len(viagens)
+
+
+def atualizar_atrasados(session) -> int:
+    """Marca como ATRASADO viagens AGENDADO/NO HORARIO que passaram do horário + tolerância.
+    Devolve quantas foram alteradas."""
+    agora = datetime.now(LOCAL_TZ)
+    viagens = session.query(Trip).filter(
+        Trip.status.in_(["AGENDADO", "NO HORARIO"]),
+        Trip.trip_direction == "SAIDA",
+    ).all()
+
+    alteradas = 0
+    for viagem in viagens:
+        try:
+            h, m = map(int, viagem.scheduled_time.split(":"))
+            horario = agora.replace(hour=h, minute=m, second=0, microsecond=0)
+            limite = horario + timedelta(minutes=DELAY_TOLERANCE_MINUTES)
+            if agora > limite:
+                viagem.status = "ATRASADO"
+                alteradas += 1
+        except Exception:
+            continue
+
+    if alteradas:
+        session.commit()
+        log.info("Atualização de atrasados: %s viagens marcadas como ATRASADO", alteradas)
+    return alteradas
 
 
 def _gravar_dia(session, dia: str):
@@ -96,3 +125,18 @@ async def rodar_reinicio_diario():
         except Exception:
             log.exception("Falha no reinício diário")
         await asyncio.sleep(60)
+
+
+async def rodar_atualizacao_atrasados():
+    """Tarefa de fundo: confere a cada minuto viagens que devem ser marcadas como ATRASADO."""
+    while True:
+        try:
+            await asyncio.to_thread(_atualizar_atrasados_thread)
+        except Exception:
+            log.exception("Falha na atualização de atrasados")
+        await asyncio.sleep(60)
+
+
+def _atualizar_atrasados_thread():
+    with SessionLocal() as session:
+        atualizar_atrasados(session)

@@ -11,6 +11,8 @@ import {
   type AbaProps,
   type TripDirection,
   type TripStatus,
+  typeOptions,
+  type TripType,
 } from '../comuns'
 
 type AbaViagensProps = AbaProps & {
@@ -142,11 +144,15 @@ export default function AbaViagens({
         </div>
         <label>
           Tipo
-          <input
+          <select
             value={tripForm.type}
-            onChange={(event) => setTripForm({ ...tripForm, type: event.target.value })}
+            onChange={(event) => setTripForm({ ...tripForm, type: event.target.value as TripType })}
             required
-          />
+          >
+            {typeOptions.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
         </label>
         <label>
           Direção
