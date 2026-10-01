@@ -295,7 +295,7 @@ function App() {
           <div className="sidebar-card">
             <p>Conectado</p>
             <strong>Administrador</strong>
-            <small>Rotas reais do sistema</small>
+            <p className="sidebar-role-desc">Rotas reais do sistema</p>
           </div>
         </aside>
 

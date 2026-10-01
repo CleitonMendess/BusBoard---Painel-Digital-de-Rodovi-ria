@@ -285,26 +285,30 @@ th {
 
 .admin-layout {
   display: grid;
-  grid-template-columns: 270px minmax(0, 1fr);
-  gap: 18px;
+  grid-template-columns: 160px minmax(0, 1fr);
+  gap: 12px;
 }
 
 .admin-sidebar {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
   align-self: start;
 }
 
 .sidebar-link {
   width: 100%;
   text-align: left;
-  padding: 13px 14px;
-  border-radius: 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
   background: rgba(2, 6, 23, 0.58);
   color: #dbeafe;
   border: 1px solid rgba(148, 163, 184, 0.14);
-  font-weight: 700;
+  font-weight: 600;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sidebar-link.active {
@@ -319,6 +323,16 @@ th {
 
 .sidebar-card strong {
   font-size: 1.1rem;
+}
+
+.sidebar-card p {
+  margin: 0 0 6px 0;
+}
+
+.sidebar-role-desc {
+  margin-top: 4px !important;
+  color: #94a3b8;
+  font-size: 0.75rem;
 }
 
 .sidebar-card small,
