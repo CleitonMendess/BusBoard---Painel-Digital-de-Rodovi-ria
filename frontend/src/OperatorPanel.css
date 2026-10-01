@@ -18,3 +18,38 @@
 .op-status-atrasado { color: #fca5a5; border-color: rgba(248, 113, 113, 0.55); }
 .op-status-no-horario { color: #86efac; border-color: rgba(134, 239, 172, 0.45); }
 .op-status-cancelado { color: #94a3b8; border-color: rgba(148, 163, 184, 0.4); }
+
+/* Aviso de "o ônibus chegou?" */
+.op-avisos {
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  background: rgba(127, 29, 29, 0.25);
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+}
+.op-avisos-titulo { margin: 0 0 0.7rem; font-weight: 700; color: #fecaca; }
+.op-avisos ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
+.op-avisos li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.6rem 0.8rem;
+  background: rgba(2, 6, 23, 0.45);
+  border-radius: 10px;
+}
+.op-avisos-dados { display: flex; align-items: baseline; gap: 0.8rem; flex-wrap: wrap; }
+.op-avisos-dados strong { color: #f8fafc; }
+.op-avisos-dados span { color: #cbd5e1; font-size: 0.95rem; }
+.op-avisos-acoes { display: flex; gap: 0.5rem; }
+.op-avisos-form { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+.op-avisos-form input[type='time'] {
+  padding: 0.55rem 0.7rem;
+  background: rgba(2, 6, 23, 0.6);
+  color: #e2e8f0;
+  border: 1px solid rgba(125, 211, 252, 0.25);
+  border-radius: 10px;
+  font: inherit;
+}
+.op-avisos-form input[type='time']:focus-visible { outline: 2px solid #7dd3fc; outline-offset: 2px; }
+tr.op-pendente { background: rgba(248, 113, 113, 0.12); }

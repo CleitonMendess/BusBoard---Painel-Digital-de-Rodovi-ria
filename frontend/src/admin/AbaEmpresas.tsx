@@ -86,7 +86,6 @@ export default function AbaEmpresas({ empresas, showNotification, refreshAllAdmi
         <table>
           <thead>
             <tr>
-              <th>ID</th>
               <th>Nome</th>
               <th>Status</th>
               <th>Ações</th>
@@ -95,7 +94,6 @@ export default function AbaEmpresas({ empresas, showNotification, refreshAllAdmi
           <tbody>
             {empresas.map((company) => (
               <tr key={company.id} className={company.active ? '' : 'row-inactive'}>
-                <td>{company.id}</td>
                 <td>{company.name}</td>
                 <td>{company.active ? 'Ativa' : 'Inativa'}</td>
                 <td>
@@ -110,7 +108,7 @@ export default function AbaEmpresas({ empresas, showNotification, refreshAllAdmi
               </tr>
             ))}
             {empresas.length === 0 && (
-              <tr><td colSpan={4}>Nenhuma empresa cadastrada</td></tr>
+              <tr><td colSpan={3}>Nenhuma empresa cadastrada</td></tr>
             )}
           </tbody>
         </table>

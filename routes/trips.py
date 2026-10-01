@@ -5,6 +5,7 @@ from dependecies import session_parametr, verificar_token, verificar_admin
 from schemas import TripSchema, StatusLogCreateSchema, Shcema_Time, TripUpdateSchema
 from models import Trip, Company, Destination,Platform, User, StatusLog
 from daily_reset import reiniciar_viagens
+from daily_reset import viagens_para_confirmar as viagens_para_confirmar_lista
 
 
 trips_router = APIRouter(prefix="/trips", tags=["trips"], dependencies=[Depends(verificar_token)])
@@ -101,6 +102,32 @@ session: Session = Depends(session_parametr),
         "trip_id": trip.id,
         "status_atual": str(trip.status),
     }
+
+@trips_router.get("/pendentes-confirmacao")
+def viagens_para_confirmar(
+    Session = Depends(session_parametr), user: User = Depends(verificar_admin)
+):
+    """Viagens cujo horário já passou e que ninguém confirmou se o ônibus chegou.
+
+    Só envia, para o operador e o administrador receberem o aviso. Marcar atraso
+    é decisão de quem opera: a resposta "não chegou" é o que vira ATRASADO.
+    """
+    pendentes = viagens_para_confirmar_lista(Session)
+    return {
+        "total": len(pendentes),
+        "viagens": [
+            {
+                "trip_id": v.id,
+                "destination": v.destination.city if v.destination else "",
+                "company": v.company.name if v.company else "",
+                "scheduled_time": v.scheduled_time,
+                "status": str(v.status),
+                "trip_direction": v.trip_direction,
+            }
+            for v in pendentes
+        ],
+    }
+
 
 @trips_router.get("/list")
 def list_trips(Session = Depends(session_parametr), user: User = Depends(verificar_admin)):

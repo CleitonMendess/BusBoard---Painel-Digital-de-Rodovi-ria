@@ -7,7 +7,6 @@
 # Configuração opcional no .env:
 #   DAILY_RESET_HOUR=3            hora do reinício (0-23). Padrão: 3
 #   TZ_NAME=America/Sao_Paulo     fuso horário. Padrão: Brasília (UTC-3)
-#   DELAY_TOLERANCE_MINUTES=5     minutos após o horário para marcar ATRASADO. Padrão: 5
 import asyncio
 import logging
 import os
@@ -15,7 +14,7 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.orm import sessionmaker
 
-from models import db, Trip, AppState
+from models import db, Trip, AppState, StatusLog
 
 log = logging.getLogger("busboard.reset")
 
@@ -26,7 +25,6 @@ from backup import criar_backup  # noqa: E402
 RESET_HOUR = int(os.getenv("DAILY_RESET_HOUR", "3"))
 TZ_NAME = os.getenv("TZ_NAME", "America/Sao_Paulo")
 CHAVE_ULTIMO_DIA = "last_reset_day"
-DELAY_TOLERANCE_MINUTES = int(os.getenv("DELAY_TOLERANCE_MINUTES", "5"))
 
 try:
     from zoneinfo import ZoneInfo
@@ -55,31 +53,11 @@ def reiniciar_viagens(session) -> int:
     return len(viagens)
 
 
-def atualizar_atrasados(session) -> int:
-    """Marca como ATRASADO viagens AGENDADO/NO HORARIO que passaram do horário + tolerância.
-    Devolve quantas foram alteradas."""
-    agora = datetime.now(LOCAL_TZ)
-    viagens = session.query(Trip).filter(
-        Trip.status.in_(["AGENDADO", "NO HORARIO"]),
-        Trip.trip_direction == "SAIDA",
-    ).all()
-
-    alteradas = 0
-    for viagem in viagens:
-        try:
-            h, m = map(int, viagem.scheduled_time.split(":"))
-            horario = agora.replace(hour=h, minute=m, second=0, microsecond=0)
-            limite = horario + timedelta(minutes=DELAY_TOLERANCE_MINUTES)
-            if agora > limite:
-                viagem.status = "ATRASADO"
-                alteradas += 1
-        except Exception:
-            continue
-
-    if alteradas:
-        session.commit()
-        log.info("Atualização de atrasados: %s viagens marcadas como ATRASADO", alteradas)
-    return alteradas
+# Uma viagem só vira ATRASADO por decisão de quem opera: o sistema pergunta se o
+# ônibus chegou e só marca atrasada quando a resposta é não (ver OperatorPanel).
+# Marcar sozinho fazia a TV mostrar atraso sem ninguém ter visto o ônibus, então
+# não existe mais tarefa de fundo que altere status por conta própria.
+STATUS_QUE_PEDEM_CONFIRMACAO = ("AGENDADO", "NO HORARIO", "EMBARQUE")
 
 
 def _gravar_dia(session, dia: str):
@@ -127,16 +105,49 @@ async def rodar_reinicio_diario():
         await asyncio.sleep(60)
 
 
-async def rodar_atualizacao_atrasados():
-    """Tarefa de fundo: confere a cada minuto viagens que devem ser marcadas como ATRASADO."""
-    while True:
-        try:
-            await asyncio.to_thread(_atualizar_atrasados_thread)
-        except Exception:
-            log.exception("Falha na atualização de atrasados")
-        await asyncio.sleep(60)
+def _horario_de(viagem, dia: datetime) -> datetime | None:
+    """Momento scheduled_time da viagem no dia de referência, ou None se for lixo."""
+    try:
+        h, m = map(int, viagem.scheduled_time.split(":")[:2])
+        return dia.replace(hour=h, minute=m, second=0, microsecond=0)
+    except (AttributeError, ValueError):
+        return None
 
 
-def _atualizar_atrasados_thread():
-    with SessionLocal() as session:
-        atualizar_atrasados(session)
+def viagens_para_confirmar(session, agora: datetime | None = None) -> list[Trip]:
+    """Viagens que já deveriam ter saído e que ninguém tocou desde o horário.
+
+    Entra aqui toda viagem cujo horário já passou e segue num status em que
+    ainda dá para dizer se o ônibus chegou. Não mexe no banco: só lê, porque a
+    resposta é dada por quem opera.
+
+    Quem já mexeu na viagem depois do horário não entra mais na lista: é o que
+    faz o aviso sumir depois de "Chegou" ou "Não chegou", sem precisar guardar
+    um campo novo no banco. O StatusLog já conta essa história.
+    """
+    momento = agora if agora is not None else datetime.now(LOCAL_TZ)
+    inicio_do_dia = momento.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # Os logs de status são gravados em UTC sem tzinfo, então a comparação
+    # também é feita em UTC. Guardamos o último momento em que cada viagem teve
+    # o status mexido.
+    dia_em_utc = inicio_do_dia.astimezone(timezone.utc).replace(tzinfo=None)
+    mexidas_em: dict[int, datetime] = {}
+    for log in session.query(StatusLog).filter(StatusLog.changed_at >= dia_em_utc).all():
+        anterior = mexidas_em.get(log.trip_id)
+        if anterior is None or log.changed_at > anterior:
+            mexidas_em[log.trip_id] = log.changed_at
+
+    pendentes = []
+    for viagem in session.query(Trip).all():
+        if str(viagem.status) not in STATUS_QUE_PEDEM_CONFIRMACAO:
+            continue
+        horario = _horario_de(viagem, inicio_do_dia)
+        if horario is None or momento < horario:
+            continue
+        horario_utc = horario.astimezone(timezone.utc).replace(tzinfo=None)
+        if mexidas_em.get(viagem.id, datetime.min) >= horario_utc:
+            # alguém já mexeu nesta viagem depois do horário dela
+            continue
+        pendentes.append(viagem)
+    return sorted(pendentes, key=lambda v: v.scheduled_time)

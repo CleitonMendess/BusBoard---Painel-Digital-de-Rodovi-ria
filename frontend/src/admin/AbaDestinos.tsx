@@ -104,7 +104,6 @@ export default function AbaDestinos({ destinos, showNotification, refreshAllAdmi
         <table>
           <thead>
             <tr>
-              <th>ID</th>
               <th>Cidade</th>
               <th>Estado</th>
               <th>Status</th>
@@ -114,7 +113,6 @@ export default function AbaDestinos({ destinos, showNotification, refreshAllAdmi
           <tbody>
             {destinos.map((destination) => (
               <tr key={destination.id} className={destination.active ? '' : 'row-inactive'}>
-                <td>{destination.id}</td>
                 <td>{destination.city}</td>
                 <td>{destination.state}</td>
                 <td>{destination.active ? 'Ativo' : 'Inativo'}</td>
@@ -130,7 +128,7 @@ export default function AbaDestinos({ destinos, showNotification, refreshAllAdmi
               </tr>
             ))}
             {destinos.length === 0 && (
-              <tr><td colSpan={5}>Nenhum destino cadastrado</td></tr>
+              <tr><td colSpan={4}>Nenhum destino cadastrado</td></tr>
             )}
           </tbody>
         </table>

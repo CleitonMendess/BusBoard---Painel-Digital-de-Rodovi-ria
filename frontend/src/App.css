@@ -297,6 +297,7 @@ th {
 }
 
 .sidebar-link {
+  position: relative;
   width: 100%;
   text-align: left;
   padding: 10px 12px;
@@ -315,6 +316,22 @@ th {
   background: linear-gradient(135deg, rgba(56, 189, 248, 0.24), rgba(15, 118, 110, 0.18));
   border-color: rgba(125, 211, 252, 0.34);
   color: #ffffff;
+}
+
+/* Contador de viagens aguardando confirmação do ônibus. */
+.sidebar-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.4rem;
+  margin-left: 0.5rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: rgba(248, 113, 113, 0.9);
+  color: #450a0a;
+  font-size: 0.75rem;
+  font-weight: 800;
+  vertical-align: middle;
 }
 
 .sidebar-card {

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { api, type Trip } from './api'
+import { api, type PendenteConfirmacao, type Trip } from './api'
+import { useAvisosChegada, pendentesOrdenadas } from './useAvisosChegada'
 import './OperatorPanel.css'
 
 type Row = Trip & { direction: 'Saída' | 'Chegada' }
@@ -27,11 +28,17 @@ export default function OperatorPanel({ embedded = false }: { embedded?: boolean
   const [savingId, setSavingId] = useState<number | null>(null)
   const [showFinished, setShowFinished] = useState(false)
   const [msg, setMsg] = useState<Msg | null>(null)
+  // viagem que o operador declarou não ter chegado: espera a nova previsão
+  const [pedindoPrevisao, setPedindoPrevisao] = useState<PendenteConfirmacao | null>(null)
+  const [novaPrevisao, setNovaPrevisao] = useState('')
+  // viagem confirmada como presente na rodoviária: falta saber se já embarca
+  const [perguntandoEmbarque, setPerguntandoEmbarque] = useState<PendenteConfirmacao | null>(null)
+  const { pendentes, recarregar } = useAvisosChegada(true)
 
-  const notify = (kind: Msg['kind'], text: string) => {
+  const notify = useCallback((kind: Msg['kind'], text: string) => {
     setMsg({ kind, text })
     window.setTimeout(() => setMsg(null), 3500)
-  }
+  }, [])
 
   const load = useCallback(async () => {
     try {
@@ -53,10 +60,13 @@ export default function OperatorPanel({ embedded = false }: { embedded?: boolean
     load()
   }, [load])
 
-  const values = (t: Row) => ({
-    scheduled: edits[t.trip_id]?.scheduled ?? toInput(t.scheduled_time),
-    estimated: edits[t.trip_id]?.estimated ?? toInput(t.estimated_time),
-  })
+  const values = useCallback(
+    (t: Row) => ({
+      scheduled: edits[t.trip_id]?.scheduled ?? toInput(t.scheduled_time),
+      estimated: edits[t.trip_id]?.estimated ?? toInput(t.estimated_time),
+    }),
+    [edits],
+  )
 
   const change = (t: Row, key: 'scheduled' | 'estimated', value: string) =>
     setEdits((prev) => ({ ...prev, [t.trip_id]: { ...values(t), ...prev[t.trip_id], [key]: value } }))
@@ -101,7 +111,81 @@ export default function OperatorPanel({ embedded = false }: { embedded?: boolean
     }
   }
 
+  // "Chegou" grava NO HORARIO (o ônibus está lá) e pergunta se já está embarcando.
+  // Sem gravar algo, a viagem continuaria pendente e o aviso voltaria em 20s.
+  const registrarChegada = useCallback(
+    async (p: PendenteConfirmacao) => {
+      setSavingId(p.trip_id)
+      try {
+        await api.trips.updateStatus(p.trip_id, 'NO HORARIO')
+        notify('success', `${p.destination}: ônibus confirmado`)
+        setPerguntandoEmbarque(p)
+        await load()
+        await recarregar()
+      } catch (e) {
+        notify('error', e instanceof Error ? e.message : 'Falha ao confirmar chegada')
+      } finally {
+        setSavingId(null)
+      }
+    },
+    [load, recarregar, notify],
+  )
+
+  const responderEmbarque = useCallback(
+    async (embarcando: boolean) => {
+      if (!perguntandoEmbarque) return
+      const destino = perguntandoEmbarque.destination
+      const id = perguntandoEmbarque.trip_id
+      setPerguntandoEmbarque(null)
+      setSavingId(id)
+      try {
+        if (embarcando) {
+          await api.trips.updateStatus(id, 'EMBARQUE')
+          notify('success', `${destino}: embarque iniciado`)
+        } else {
+          notify('success', `${destino}: aguardando embarque`)
+        }
+        await load()
+        await recarregar()
+      } catch (e) {
+        notify('error', e instanceof Error ? e.message : 'Falha ao marcar embarque')
+      } finally {
+        setSavingId(null)
+      }
+    },
+    [perguntandoEmbarque, load, recarregar, notify],
+  )
+
+  // "Não chegou": primeiro marca ATRASADO e depois pede a nova previsão, que é
+  // gravada junto. Sem previsão o atraso fica sem informação na TV.
+  const registrarAtraso = useCallback(async () => {
+    if (!pedindoPrevisao) return
+    if (!novaPrevisao) {
+      notify('error', 'Informe a nova previsão de chegada')
+      return
+    }
+    setSavingId(pedindoPrevisao.trip_id)
+    try {
+      const linha = rows.find((t) => t.trip_id === pedindoPrevisao.trip_id)
+      await api.trips.updateTime(pedindoPrevisao.trip_id, {
+        scheduled_time: linha ? values(linha).scheduled : pedindoPrevisao.scheduled_time,
+        estimated_time: novaPrevisao,
+      })
+      await api.trips.updateStatus(pedindoPrevisao.trip_id, 'ATRASADO')
+      notify('success', `${pedindoPrevisao.destination}: atraso registrado, nova previsão ${novaPrevisao}`)
+      setPedindoPrevisao(null)
+      setNovaPrevisao('')
+      await load()
+      await recarregar()
+    } catch (e) {
+      notify('error', e instanceof Error ? e.message : 'Falha ao registrar atraso')
+    } finally {
+      setSavingId(null)
+    }
+  }, [pedindoPrevisao, novaPrevisao, rows, load, recarregar, notify, values])
+
   const visibleRows = showFinished ? rows : rows.filter((t) => !HIDDEN.includes(t.status))
+  const emAlerta = new Set(pendentes.map((p) => p.trip_id))
 
   return (
     <section className="op-panel">
@@ -122,6 +206,107 @@ export default function OperatorPanel({ embedded = false }: { embedded?: boolean
         Mostrar viagens encerradas (saiu, chegou, cancelado)
       </label>
 
+      {pendentes.length > 0 && (
+        <div className="op-avisos" role="alert">
+          <p className="op-avisos-titulo">
+            {pendentes.length === 1
+              ? '1 viagem passou do horário e precisa de confirmação'
+              : `${pendentes.length} viagens passaram do horário e precisam de confirmação`}
+          </p>
+          <ul>
+            {pendentesOrdenadas(pendentes).map((p) => (
+              <li key={p.trip_id}>
+                <div className="op-avisos-dados">
+                  <strong>{p.destination}</strong>
+                  <span>{p.scheduled_time}</span>
+                  <span>{p.company}</span>
+                </div>
+                <div className="op-avisos-acoes">
+                  <button
+                    type="button"
+                    className="ghost-button"
+                    disabled={savingId === p.trip_id}
+                    onClick={() => registrarChegada(p)}
+                  >
+                    Chegou
+                  </button>
+                  <button
+                    type="button"
+                    className="primary-button"
+                    onClick={() => {
+                      setPedindoPrevisao(p)
+                      setNovaPrevisao('')
+                    }}
+                  >
+                    Não chegou
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {perguntandoEmbarque && (
+        <div className="op-avisos" role="dialog" aria-label="Confirmação de embarque">
+          <p className="op-avisos-titulo">
+            {perguntandoEmbarque.destination}: o ônibus já está embarcando?
+          </p>
+          <div className="op-avisos-form">
+            <button
+              type="button"
+              className="primary-button"
+              disabled={savingId === perguntandoEmbarque.trip_id}
+              onClick={() => responderEmbarque(true)}
+            >
+              Sim, está embarcando
+            </button>
+            <button
+              type="button"
+              className="ghost-button"
+              disabled={savingId === perguntandoEmbarque.trip_id}
+              onClick={() => responderEmbarque(false)}
+            >
+              Ainda não
+            </button>
+          </div>
+        </div>
+      )}
+
+      {pedindoPrevisao && (
+        <div className="op-avisos" role="dialog" aria-label="Nova previsão de chegada">
+          <p className="op-avisos-titulo">
+            Nova previsão para {pedindoPrevisao.destination} (horário {pedindoPrevisao.scheduled_time})
+          </p>
+          <div className="op-avisos-form">
+            <input
+              type="time"
+              value={novaPrevisao}
+              onChange={(e) => setNovaPrevisao(e.target.value)}
+              aria-label="Nova previsão de chegada"
+            />
+            <button
+              type="button"
+              className="primary-button"
+              disabled={!novaPrevisao || savingId === pedindoPrevisao.trip_id}
+              onClick={registrarAtraso}
+            >
+              {savingId === pedindoPrevisao.trip_id ? 'Salvando...' : 'Salvar como atrasado'}
+            </button>
+            <button
+              type="button"
+              className="ghost-button"
+              onClick={() => {
+                setPedindoPrevisao(null)
+                setNovaPrevisao('')
+              }}
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="route-card table-wrap">
         {loading ? (
           <div className="loading">Carregando viagens...</div>
@@ -140,7 +325,10 @@ export default function OperatorPanel({ embedded = false }: { embedded?: boolean
             </thead>
             <tbody>
               {visibleRows.map((t) => (
-                <tr key={`${t.direction}-${t.trip_id}`}>
+                <tr
+                  key={`${t.direction}-${t.trip_id}`}
+                  className={emAlerta.has(t.trip_id) ? 'op-pendente' : undefined}
+                >
                   <td>{t.direction}</td>
                   <td>{t.destination}</td>
                   <td>{t.company}</td>

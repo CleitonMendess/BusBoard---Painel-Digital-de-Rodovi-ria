@@ -28,6 +28,7 @@ import AbaPlataformas from './admin/AbaPlataformas'
 import AbaViagens from './admin/AbaViagens'
 import './App.css'
 import OperatorPanel from './OperatorPanel'
+import { useAvisosChegada } from './useAvisosChegada'
 
 function App() {
   const [currentTime, setCurrentTime] = useState(new Date())
@@ -37,6 +38,8 @@ function App() {
   const [role, setRole] = useState<string | null>(getRole())
   const isOperator = isAuthenticated && role !== 'adm'
   const [notification, setNotification] = useState<Notification | null>(null)
+  // O admin também é avisado quando uma viagem passa do horário sem confirmação.
+  const avisosChegada = useAvisosChegada(isAuthenticated)
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -272,6 +275,11 @@ function App() {
           </button>
           <button className={adminTab === 'operation' ? 'sidebar-link active' : 'sidebar-link'} onClick={() => handleOpenAdminRoute('operation')}>
             Operação do dia
+            {avisosChegada.pendentes.length > 0 && (
+              <span className="sidebar-badge" aria-label={`${avisosChegada.pendentes.length} viagens para confirmar`}>
+                {avisosChegada.pendentes.length}
+              </span>
+            )}
           </button>
           <button className={adminTab === 'users' ? 'sidebar-link active' : 'sidebar-link'} onClick={() => handleOpenAdminRoute('users')}>
             Usuários

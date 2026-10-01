@@ -86,7 +86,6 @@ export default function AbaPlataformas({ plataformas, showNotification, refreshA
         <table>
           <thead>
             <tr>
-              <th>ID</th>
               <th>Número</th>
               <th>Status</th>
               <th>Ações</th>
@@ -95,7 +94,6 @@ export default function AbaPlataformas({ plataformas, showNotification, refreshA
           <tbody>
             {plataformas.map((platform) => (
               <tr key={platform.id} className={platform.active ? '' : 'row-inactive'}>
-                <td>{platform.id}</td>
                 <td>{platform.number}</td>
                 <td>{platform.active ? 'Ativa' : 'Inativa'}</td>
                 <td>
@@ -110,7 +108,7 @@ export default function AbaPlataformas({ plataformas, showNotification, refreshA
               </tr>
             ))}
             {plataformas.length === 0 && (
-              <tr><td colSpan={4}>Nenhuma plataforma cadastrada</td></tr>
+              <tr><td colSpan={3}>Nenhuma plataforma cadastrada</td></tr>
             )}
           </tbody>
         </table>

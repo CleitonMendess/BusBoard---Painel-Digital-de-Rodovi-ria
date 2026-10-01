@@ -177,6 +177,8 @@ export const api = {
         method: 'PATCH',
         body: JSON.stringify(data),
       }),
+    pendentesConfirmacao: () =>
+      request<{ total: number; viagens: PendenteConfirmacao[] }>('/trips/pendentes-confirmacao'),
   },
 
   companies: {
@@ -236,6 +238,15 @@ export const api = {
 
 export function logout() {
   clearToken();
+}
+
+export interface PendenteConfirmacao {
+  trip_id: number;
+  destination: string;
+  company: string;
+  scheduled_time: string;
+  status: string;
+  trip_direction: string;
 }
 
 export interface Trip {

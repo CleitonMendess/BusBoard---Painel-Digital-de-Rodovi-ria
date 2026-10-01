@@ -39,8 +39,13 @@ const effectiveTime = (t: Trip) => hhmm(t.estimated_time) || hhmm(t.scheduled_ti
 function visibleTrips(trips: Trip[], nowMin: number) {
   return trips
     .filter((t) => {
+      // SAIU e CHEGOU são viagem encerrada: saem da TV de propósito.
       if (t.status === 'SAIU' || t.status === 'CHEGOU') return false
-      if (t.status === 'EMBARQUE' || t.status === 'ATRASADO') return true
+      // NO HORARIO, EMBARQUE e ATRASADO garantem que a viagem continua em curso:
+      // o ônibus está na rodoviária ou a espera de passageiro. Se caísse na
+      // regra das 30 min, uma viagem que o operador acabou de confirmar como
+      // "chegou" sumiria da TV justo quando o passageiro precisa ver.
+      if (t.status === 'NO HORARIO' || t.status === 'EMBARQUE' || t.status === 'ATRASADO') return true
       return toMin(effectiveTime(t)) >= nowMin - 30
     })
     .sort((a, b) => toMin(effectiveTime(a)) - toMin(effectiveTime(b)))
