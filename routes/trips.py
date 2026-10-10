@@ -107,7 +107,7 @@ session: Session = Depends(session_parametr),
 def viagens_para_confirmar(
     Session = Depends(session_parametr), user: User = Depends(verificar_admin)
 ):
-    """Viagens cujo horário já passou e que ninguém confirmou se o ônibus chegou.
+    """Viagens cujo horário ou previsão já passou e que ninguém confirmou se o ônibus chegou.
 
     Só envia, para o operador e o administrador receberem o aviso. Marcar atraso
     é decisão de quem opera: a resposta "não chegou" é o que vira ATRASADO.
@@ -121,6 +121,7 @@ def viagens_para_confirmar(
                 "destination": v.destination.city if v.destination else "",
                 "company": v.company.name if v.company else "",
                 "scheduled_time": v.scheduled_time,
+                "estimated_time": v.estimated_time,
                 "status": str(v.status),
                 "trip_direction": v.trip_direction,
             }

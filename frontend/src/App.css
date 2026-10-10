@@ -285,7 +285,7 @@ th {
 
 .admin-layout {
   display: grid;
-  grid-template-columns: 160px minmax(0, 1fr);
+  grid-template-columns: 185px minmax(0, 1fr);
   gap: 12px;
 }
 

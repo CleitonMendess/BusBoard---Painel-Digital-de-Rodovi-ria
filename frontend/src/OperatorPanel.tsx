@@ -218,7 +218,7 @@ export default function OperatorPanel({ embedded = false }: { embedded?: boolean
               <li key={p.trip_id}>
                 <div className="op-avisos-dados">
                   <strong>{p.destination}</strong>
-                  <span>{p.scheduled_time}</span>
+                  <span>{p.scheduled_time}{p.estimated_time && ` (previsão: ${p.estimated_time})`}</span>
                   <span>{p.company}</span>
                 </div>
                 <div className="op-avisos-acoes">

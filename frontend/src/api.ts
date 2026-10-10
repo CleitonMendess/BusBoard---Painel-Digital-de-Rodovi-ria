@@ -245,6 +245,7 @@ export interface PendenteConfirmacao {
   destination: string;
   company: string;
   scheduled_time: string;
+  estimated_time: string | null;
   status: string;
   trip_direction: string;
 }

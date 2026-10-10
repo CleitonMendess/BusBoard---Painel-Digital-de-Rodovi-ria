@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { api, type PendenteConfirmacao } from './api'
 
 // De quanto em quanto tempo se pergunta ao servidor se há viagem para conferir.
-const INTERVALO_MS = 20_000
+const INTERVALO_MS = 5_000
 
 /**
  * Viagens cujo horário já passou e que ninguém confirmou ainda.
@@ -18,7 +18,8 @@ export function useAvisosChegada(ativo: boolean) {
 
   const carregar = useCallback(async () => {
     if (!ativo) {
-      setPendentes([])
+      // Não limpa a lista ao ficar inativo - mantém o último estado conhecido
+      // para o badge da sidebar não sumir ao trocar de aba
       return
     }
     try {

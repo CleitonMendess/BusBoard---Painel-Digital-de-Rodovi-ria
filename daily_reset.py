@@ -114,14 +114,24 @@ def _horario_de(viagem, dia: datetime) -> datetime | None:
         return None
 
 
+def _previsao_de(viagem, dia: datetime) -> datetime | None:
+    """Momento estimated_time da viagem no dia de referência, ou None se não houver/lixo."""
+    if not viagem.estimated_time:
+        return None
+    try:
+        h, m = map(int, viagem.estimated_time.split(":")[:2])
+        return dia.replace(hour=h, minute=m, second=0, microsecond=0)
+    except (AttributeError, ValueError):
+        return None
+
+
 def viagens_para_confirmar(session, agora: datetime | None = None) -> list[Trip]:
-    """Viagens que já deveriam ter saído e que ninguém tocou desde o horário.
+    """Viagens que já deveriam ter saído/chegado e que ninguém tocou desde o horário/previsão.
 
-    Entra aqui toda viagem cujo horário já passou e segue num status em que
-    ainda dá para dizer se o ônibus chegou. Não mexe no banco: só lê, porque a
-    resposta é dada por quem opera.
+    Entra aqui toda viagem cujo horário (scheduled_time) ou previsão (estimated_time) já passou
+    e segue num status em que ainda dá para dizer se o ônibus chegou. Não mexe no banco: só lê.
 
-    Quem já mexeu na viagem depois do horário não entra mais na lista: é o que
+    Quem já mexeu na viagem depois do horário/previsão não entra mais na lista: é o que
     faz o aviso sumir depois de "Chegou" ou "Não chegou", sem precisar guardar
     um campo novo no banco. O StatusLog já conta essa história.
     """
@@ -142,12 +152,28 @@ def viagens_para_confirmar(session, agora: datetime | None = None) -> list[Trip]
     for viagem in session.query(Trip).all():
         if str(viagem.status) not in STATUS_QUE_PEDEM_CONFIRMACAO:
             continue
+
+        # Verifica scheduled_time
         horario = _horario_de(viagem, inicio_do_dia)
-        if horario is None or momento < horario:
+        horario_passou = horario is not None and momento >= horario
+        horario_ja_tratado = horario is not None and mexidas_em.get(viagem.id, datetime.min) >= horario.astimezone(timezone.utc).replace(tzinfo=None)
+
+        # Verifica estimated_time (previsão)
+        previsao = _previsao_de(viagem, inicio_do_dia)
+        previsao_passou = previsao is not None and momento >= previsao
+        previsao_ja_tratada = previsao is not None and mexidas_em.get(viagem.id, datetime.min) >= previsao.astimezone(timezone.utc).replace(tzinfo=None)
+
+        # Se nenhum dos dois passou, não está pendente
+        if not horario_passou and not previsao_passou:
             continue
-        horario_utc = horario.astimezone(timezone.utc).replace(tzinfo=None)
-        if mexidas_em.get(viagem.id, datetime.min) >= horario_utc:
-            # alguém já mexeu nesta viagem depois do horário dela
+
+        # Se ambos passaram mas ambos já foram tratados, não está pendente
+        if horario_passou and previsao_passou and horario_ja_tratado and previsao_ja_tratada:
             continue
+        if horario_passou and not previsao_passou and horario_ja_tratado:
+            continue
+        if previsao_passou and not horario_passou and previsao_ja_tratada:
+            continue
+
         pendentes.append(viagem)
     return sorted(pendentes, key=lambda v: v.scheduled_time)

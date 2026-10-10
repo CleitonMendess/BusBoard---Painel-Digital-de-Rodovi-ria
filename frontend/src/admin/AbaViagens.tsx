@@ -126,16 +126,6 @@ export default function AbaViagens({
     }
   }
 
-  async function handleChangeTripStatus(tripId: number, status: TripStatus) {
-    try {
-      const result = await api.trips.updateStatus(tripId, status)
-      showNotification('success', result.mensagem)
-      await refreshAllAdminData()
-    } catch (e) {
-      showNotification('error', readError(e, 'Falha ao atualizar status'))
-    }
-  }
-
   return (
     <div className="route-grid trips-layout">
       <form className="route-card form-card" onSubmit={handleSaveTrip}>
@@ -247,7 +237,6 @@ export default function AbaViagens({
               <th>Destino</th>
               <th>Plataforma</th>
               <th>Status</th>
-              <th>Mudar status</th>
               <th>Ações</th>
             </tr>
           </thead>
@@ -268,16 +257,6 @@ export default function AbaViagens({
                   <span className={`status-badge ${statusClassMap[trip.status as TripStatus] || ''}`}>
                     {trip.status}
                   </span>
-                </td>
-                <td>
-                  <select
-                    value={trip.status}
-                    onChange={(event) => handleChangeTripStatus(trip.trip_id ?? trip.id ?? 0, event.target.value as TripStatus)}
-                  >
-                    {statusOptions.map((status) => (
-                      <option key={status} value={status}>{status}</option>
-                    ))}
-                  </select>
                 </td>
                 <td>
                   <div className="row-actions">
